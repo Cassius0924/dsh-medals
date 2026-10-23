@@ -54,17 +54,14 @@ try{
  assert(details.every(d=>d.meshes>10&&d.vertices>1000));
  await page.goto(base+'/api/dsh-medals/ui/?lang=zh');await page.locator('#collection-grid .medal-card').first().waitFor();
  await page.locator('#debug-toggle').click();
- if(review)await page.locator('[data-filter="monthly"]').click();
  await page.locator('#collection-grid').scrollIntoViewIfNeeded();
  if(!review)await page.evaluate(async()=>{for(let y=0;y<document.documentElement.scrollHeight;y+=innerHeight*.7){scrollTo(0,y);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}scrollTo(0,0);});
  await capture(page,'enamel-gallery-desktop');
  await page.locator('[data-medal="month-days-all"]').click();assert.equal(await page.locator('.rotate-controls').isVisible(),true);await capture(page,'enamel-rosette-detail');await page.locator('#detail-close').click();
  await page.setViewportSize({width:390,height:844});await capture(page,'enamel-gallery-mobile');
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
- if(review)await page.locator('[data-filter="daily"]').click();
  await page.locator('[data-medal="daily-4"]').click();await capture(page,'enamel-daily-mobile');await page.locator('#detail-close').click();
  await page.locator('[data-debug-state="locked"]').click();
- if(review)await page.locator('[data-filter="monthly"]').click();
  await page.locator('[data-medal="month-days-all"]').click();assert.equal(await page.locator('.rotate-controls').isVisible(),false);await capture(page,'enamel-locked-mobile');
  assert.deepEqual((await service.refresh()).challenges.awards,initial.challenges.awards);
  assert.deepEqual(errors,[]);assert.deepEqual(failures,[]);

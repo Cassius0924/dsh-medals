@@ -74,7 +74,7 @@ try{
   const unseen=(await service.refresh()).challenges.unseen.length;
   const acknowledged=page.waitForResponse(r=>r.url().endsWith('/challenges/ack'));
   const resynced=page.waitForResponse(r=>r.url().endsWith('/status'));
-  await page.locator('#reveal-later').click();
+  await page.locator('#reveal-close').click();
   await page.waitForFunction(()=>!document.querySelector('#reveal-dialog').open);
   await acknowledged;await resynced;
   assert.equal((await service.refresh()).challenges.unseen.length,unseen-1);
@@ -86,6 +86,9 @@ try{
   await page.route('**/host-test',route=>route.fulfill({contentType:'text/html',body:'<iframe src="/api/dsh-medals/ui/?lang=zh" style="width:100%;height:900px"></iframe>'}));
   await page.goto(origin+'/host-test');const frame=page.frameLocator('iframe');
   await frame.locator('#collection-grid .medal-card').first().waitFor();
+  // Remaining new medals play automatically when the panel opens.
+  await frame.locator('#reveal-dialog[open]').waitFor();await frame.locator('#reveal-close').click();
+  await frame.locator('#reveal-dialog:not([open])').waitFor({state:'attached'});
   await frame.locator('[data-view="progress"]').click();await frame.locator('[data-period="week"]').click();
   await page.evaluate(()=>document.querySelector('iframe').contentWindow.postMessage({type:'dsh-medals:locale',locale:'en'},location.origin));
   await frame.locator('#progress-title').filter({hasText:'This week'}).waitFor();

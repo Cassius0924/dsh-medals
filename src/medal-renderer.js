@@ -855,7 +855,9 @@ function getEngine() {
   const fill = new THREE.DirectionalLight('#f0f4ff', 1.1);fill.position.set(0,-1,6);scene.add(fill);
   const bounce = new THREE.HemisphereLight('#eef3ff','#b4a394', .65);scene.add(bounce);
   const rim = new THREE.DirectionalLight('#b9d5ff', 1.5); rim.position.set(4,1,2); scene.add(rim);
-  engine = { renderer, scene, camera, environment, renders: 0, healthy: true };
+  // A warm light that sweeps across the metal once when a medal lands.
+  const glint = new THREE.DirectionalLight('#fff1d6', 0); scene.add(glint);
+  engine = { renderer, scene, camera, environment, glint, renders: 0, healthy: true };
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); engine.healthy = false; for (const stage of stages) stage.useFallback(); });
   return engine;
 }
@@ -864,23 +866,33 @@ function animationTick(time) {
   frame = 0;
   const candidates = [...stages].filter(stage => stage.shouldAnimate());
   if (!candidates.length) return;
-  if (time - previousFrame > 40) {
-    previousFrame = time;
-    for (const stage of candidates) stage.draw(time);
-  }
+  // Spinning and entrance stages draw every frame; idle breathing stays at a gentle 25fps.
+  const throttled = time - previousFrame > 40;
+  if (throttled) previousFrame = time;
+  for (const stage of candidates) if (throttled || stage.smooth()) stage.draw(time);
   frame = requestAnimationFrame(animationTick);
 }
 
 function wake() { if (!frame && !document.hidden && !reducedMotion.matches && [...stages].some(stage => stage.shouldAnimate())) frame = requestAnimationFrame(animationTick); }
 
+const SPIN_SPEED = TAU / 12000; // radians per ms: one turn every 12 seconds
+const SPIN_TILT = .12;
+const RESUME_DELAY = 2000;
+const ENTRANCE_FLIGHT = 1800, ENTRANCE_SETTLE = 450, GLINT_DURATION = 1100;
+const POSE = { x: .1, y: -.22 };
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const approach = (value, target, dt, ms) => value + (target - value) * (1 - Math.exp(-dt / ms));
+
 class MedalStage {
-  constructor(canvas, { medal, interactive = false, onFallback = () => {} }) {
-    this.canvas = canvas; this.medal = medal; this.interactive = interactive; this.onFallback = onFallback;
+  constructor(canvas, { medal, interactive = false, autoSpin = false, onFallback = () => {} }) {
+    this.canvas = canvas; this.medal = medal; this.interactive = interactive; this.autoSpin = autoSpin; this.onFallback = onFallback;
     this.ctx = canvas.getContext('2d', { alpha: true });
     const bounds=canvas.getBoundingClientRect();
     this.x = .17; this.y = -.32; this.visible = bounds.width>0&&bounds.height>0&&bounds.bottom>0&&bounds.top<innerHeight&&bounds.right>0&&bounds.left<innerWidth; this.fallback = false; this.destroyed = false;
     this.cinematic = canvas.matches('.hero-canvas,.reveal-canvas') || interactive;
     this.width = 0; this.height = 0; this.listeners = [];
+    this.resetMotion();
     this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(canvas);
     this.visibilityObserver = new IntersectionObserver(([entry]) => { this.visible = entry.isIntersecting; if (this.visible) { this.draw(); wake(); } }); this.visibilityObserver.observe(canvas);
     stages.add(this); pruneModels(); this.bind(); this.draw(); wake();
@@ -888,28 +900,89 @@ class MedalStage {
 
   static get diagnostics() { return { engine: 'three.js', revision: THREE.REVISION, webgl: !!engine?.healthy, renders: engine?.renders || 0, contexts: engine ? 1 : 0, cachedModels: models.size }; }
 
+  resetMotion() {
+    this.spin = 0; this.inertia = 0; this.spinDirection = 1; this.paused = false; this.lastTime = 0;
+    // Start turning shortly after a medal opens rather than waiting the full resume delay.
+    this.idleSince = performance.now() - RESUME_DELAY + 400;
+    this.endEntrance(); this.glintStart = 0; this.pose = { scale: 1, z: 0, lift: 0 }; this.glint = 0; this.sweep = 0;
+  }
+
   shouldAnimate() {
     if (this.medal.locked || this.destroyed || this.fallback || !this.visible || !this.cinematic || reducedMotion.matches || document.hidden) return false;
     const dialog = this.canvas.closest('dialog');
     return dialog ? dialog.open : !document.querySelector('dialog[open]');
   }
 
+  // Stop an entrance early (drag, orient, fallback) and still let the caller reveal its copy.
+  endEntrance() { const e = this.entrance; this.entrance = null; this.pose = { scale: 1, z: 0, lift: 0 }; if (e && !e.landed) { e.landed = true; e.resolve(); } }
+
+  smooth() { return !!this.entrance || !!this.glintStart || (this.autoSpin && !this.paused) || this.inertia !== 0; }
+
+  // Advance entrance, inertia and auto-spin for this frame.
+  step(time) {
+    const dt = this.lastTime ? Math.min(64, time - this.lastTime) : 0; this.lastTime = time;
+    if (this.entrance) return this.stepEntrance(time);
+    if (this.glintStart) {
+      const g = (time - this.glintStart) / GLINT_DURATION;
+      if (g >= 1) { this.glintStart = 0; this.glint = 0; this.sweep = 0; }
+      else { this.glint = Math.sin(g * Math.PI) ** 2; this.sweep = easeInOut(g); }
+    }
+    if (!this.autoSpin || this.dragging || !dt) return;
+    if (this.inertia) {
+      this.y += this.inertia * dt; this.inertia *= Math.exp(-dt / 420);
+      if (Math.abs(this.inertia) < SPIN_SPEED * .5) { this.inertia = 0; this.idleSince = time; }
+    }
+    const resting = !this.paused && !this.inertia && time - this.idleSince > RESUME_DELAY;
+    this.spin = approach(this.spin, resting ? SPIN_SPEED * this.spinDirection : 0, dt, 700);
+    if (Math.abs(this.spin) < 1e-6) this.spin = 0;
+    this.y += this.spin * dt;
+    if (resting) this.x = approach(this.x, SPIN_TILT, dt, 1400);
+  }
+
+  stepEntrance(time) {
+    const e = this.entrance; e.start ??= time;
+    const elapsed = time - e.start, f = Math.min(1, elapsed / ENTRANCE_FLIGHT), ease = easeOutCubic(f);
+    this.y = POSE.y - this.spinDirection * 2 * TAU * (1 - ease);
+    this.x = POSE.x + .55 * (1 - ease);
+    const settle = Math.min(1, Math.max(0, (elapsed - ENTRANCE_FLIGHT) / ENTRANCE_SETTLE));
+    this.pose = { z: -18 * (1 - ease), lift: -.7 * (1 - ease), scale: .45 + .55 * ease + .04 * Math.sin(settle * Math.PI) * (1 - settle) };
+    if (f >= 1 && !e.landed) { e.landed = true; this.glintStart = time; this.glint = 0; e.resolve(); }
+    if (e.landed) { const g = Math.min(1, (time - this.glintStart) / GLINT_DURATION); this.glint = Math.sin(g * Math.PI) ** 2; this.sweep = easeInOut(g); }
+    if (settle >= 1) { this.entrance = null; this.pose = { scale: 1, z: 0, lift: 0 }; this.idleSince = time; }
+  }
+
+  // Fly the medal in from the depth of the scene. Resolves when it lands facing the viewer.
+  playEntrance() {
+    this.cancel(); this.resetMotion();
+    const finish = () => { this.x = POSE.x; this.y = POSE.y; this.draw(); return Promise.resolve(); };
+    if (this.medal.locked || this.fallback || reducedMotion.matches) return finish();
+    return new Promise(resolve => {
+      this.entrance = { start: null, landed: false, resolve };
+      this.stepEntrance(this.entrance.start = performance.now()); this.entrance.start = null;
+      this.lastTime = 0; this.draw(); wake();
+    });
+  }
+
   draw(time = 0) {
     if (this.destroyed || !this.visible || document.hidden) return;
     const bounds = this.canvas.getBoundingClientRect(); if (!bounds.width || !bounds.height) return;
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    // Large full-panel stages trade a little sharpness for a steady 60fps.
+    const ratio = Math.min(window.devicePixelRatio || 1, bounds.width * bounds.height > 400000 ? 1.5 : 2);
     const w = Math.round(bounds.width * ratio), h = Math.round(bounds.height * ratio);
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
     if (this.medal.locked) return drawFlat(this,true);
     if (this.fallback) return this.drawFallback();
     try{this.engine??=getEngine();this.model??=buildMedal(this.medal);}catch{return this.useFallback();}
-    const { renderer, scene, camera } = this.engine;
+    const { renderer, scene, camera, glint } = this.engine;
     if (!this.engine.healthy) return this.useFallback();
+    if (time && this.cinematic) this.step(time);
     const previous = scene.getObjectByName('active-medal'); if (previous) scene.remove(previous);
     this.model.name = 'active-medal'; scene.add(this.model);
-    const breathe = time && !this.dragging ? Math.sin(time * .00036) * .035 : 0;
+    const breathe = time && !this.dragging && !this.autoSpin && !this.entrance ? Math.sin(time * .00036) * .035 : 0;
     this.model.rotation.set(this.x + breathe * .3, this.y + breathe, -.035);
-    scene.environmentRotation.set(0, .27 + (time ? Math.sin(time * .00020) * .05 : 0), .12);
+    this.model.position.set(0, this.pose.lift, this.pose.z); this.model.scale.setScalar(this.pose.scale);
+    scene.environmentRotation.set(0, .27 + (time ? Math.sin(time * .00020) * .05 : 0) + (this.glint ? (this.sweep - .5) * 1.0 : 0), .12);
+    glint.intensity = this.glint * 1.5; glint.position.set(-7 + this.sweep * 14, 3, 1.5);
     camera.aspect = w / h;
     camera.position.z = camera.aspect < 1 ? 5.25 / camera.aspect : 5.25;
     camera.updateProjectionMatrix();
@@ -920,19 +993,21 @@ class MedalStage {
     this.ctx.clearRect(0,0,w,h); this.ctx.drawImage(renderer.domElement,0,0,w,h); this.engine.renders++;
   }
 
-  setMedal(medal) { this.cancel();this.medal = medal;this.model=null;this.x = .17; this.y = -.32;this.draw();pruneModels();wake(); }
+  setMedal(medal) { this.cancel();this.medal = medal;this.model=null;this.x = .17; this.y = -.32;this.resetMotion();this.draw();pruneModels();wake(); }
 
   orient(side) {
     if(this.medal.locked)return;
-    this.cancel();
-    const startX = this.x, startY = this.y, targetX = side === 'reset' ? .17 : 0, targetY = side === 'back' ? Math.PI : side === 'front' ? 0 : -.32;
+    this.cancel(); this.endEntrance(); this.inertia = 0; this.spin = 0; this.paused = side !== 'reset'; this.idleSince = performance.now();
+    const base = side === 'back' ? Math.PI : side === 'front' ? 0 : -.32;
+    // Turn the short way round, even after many auto-spin revolutions.
+    const startX = this.x, startY = this.y, targetX = side === 'reset' ? .17 : 0, targetY = base + Math.round((startY - base) / TAU) * TAU;
     if (reducedMotion.matches || this.fallback) { this.x = targetX; this.y = targetY; this.draw(); return; }
     const start = performance.now();
-    const animate = time => { const t = Math.min((time - start) / 650,1), ease = 1 - Math.pow(1-t,4); this.x = startX + (targetX-startX) * ease; this.y = startY + (targetY-startY) * ease; this.draw(); if (t < 1 && !this.destroyed) this.orientationFrame = requestAnimationFrame(animate); else this.orientationFrame = 0; };
+    const animate = time => { const t = Math.min((time - start) / 650,1), ease = 1 - Math.pow(1-t,4); this.x = startX + (targetX-startX) * ease; this.y = startY + (targetY-startY) * ease; this.idleSince = time; this.draw(); if (t < 1 && !this.destroyed) this.orientationFrame = requestAnimationFrame(animate); else { this.orientationFrame = 0; wake(); } };
     this.orientationFrame = requestAnimationFrame(animate);
   }
 
-  useFallback() { this.fallback = true; this.cancel(); this.onFallback(); this.drawFallback(); }
+  useFallback() { this.fallback = true; this.cancel(); this.endEntrance(); this.onFallback(); this.drawFallback(); }
 
   drawFallback() {
     if (!this.ctx || this.destroyed) return;
@@ -956,32 +1031,43 @@ class MedalStage {
   bind() {
     if (!this.interactive) return;
     const canvas = this.canvas; canvas.style.touchAction = 'pan-y'; let pointer;
+    const grab = () => { this.dragging = true; this.endEntrance(); this.spin = 0; this.inertia = 0; this.paused = false; };
     this.listen(canvas,'pointerdown', event => {
       if (this.medal.locked || event.button !== 0) return; this.cancel();
-      pointer = { id:event.pointerId, x:event.clientX, y:event.clientY, originX:this.x, originY:this.y, active:event.pointerType !== 'touch' };
-      if (pointer.active) { canvas.setPointerCapture(event.pointerId); this.dragging = true; }
+      pointer = { id:event.pointerId, x:event.clientX, y:event.clientY, originX:this.x, originY:this.y, active:event.pointerType !== 'touch', lastX:event.clientX, lastTime:event.timeStamp, velocity:0 };
+      if (pointer.active) { canvas.setPointerCapture(event.pointerId); grab(); }
     });
     this.listen(canvas,'pointermove', event => {
       if (this.medal.locked || !pointer || event.pointerId !== pointer.id) return;
       const dx = event.clientX-pointer.x, dy=event.clientY-pointer.y;
       if (!pointer.active) {
         if (Math.abs(dy)>Math.abs(dx) && Math.abs(dy)>8) { pointer=undefined; return; }
-        if (Math.abs(dx)<8) return; pointer.active=true; this.dragging=true; canvas.setPointerCapture(event.pointerId);
+        if (Math.abs(dx)<8) return; pointer.active=true; grab(); canvas.setPointerCapture(event.pointerId);
       }
+      // Track a smoothed angular velocity so a flick keeps the medal turning.
+      const elapsed = Math.max(1, event.timeStamp - pointer.lastTime), instant = (event.clientX - pointer.lastX) * .011 / elapsed;
+      pointer.velocity = pointer.velocity * .6 + instant * .4; pointer.lastX = event.clientX; pointer.lastTime = event.timeStamp;
       this.y=pointer.originY+dx*.011; this.x=clamp(pointer.originX+dy*.006,-1.1,1.1); this.draw();
     });
-    for (const name of ['pointerup','pointercancel','lostpointercapture']) this.listen(canvas,name,()=>{ pointer=undefined; this.dragging=false; wake(); });
+    for (const name of ['pointerup','pointercancel','lostpointercapture']) this.listen(canvas,name,event=>{
+      if (pointer?.active && this.dragging) {
+        const stale = event.timeStamp - pointer.lastTime > 90, velocity = stale ? 0 : clamp(pointer.velocity, -.02, .02);
+        if (Math.abs(velocity) > SPIN_SPEED) { this.inertia = velocity; this.spinDirection = Math.sign(velocity); }
+      }
+      pointer=undefined; this.dragging=false; this.idleSince=performance.now(); this.lastTime=0; wake();
+    });
     this.listen(canvas,'keydown',event=>{
       if (this.medal.locked) return;
       if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home'].includes(event.key)) return;
       event.preventDefault(); this.cancel(); if (event.key==='Home') return this.orient('reset');
+      this.spin = 0; this.inertia = 0; this.idleSince = performance.now();
       if (event.key==='ArrowLeft') this.y-=.16; if(event.key==='ArrowRight')this.y+=.16;
       if(event.key==='ArrowUp')this.x-=.12; if(event.key==='ArrowDown')this.x+=.12; this.draw();
     });
   }
 
   cancel() { if (this.orientationFrame) cancelAnimationFrame(this.orientationFrame); this.orientationFrame = 0; }
-  dispose() { this.destroyed=true; this.cancel(); this.resizeObserver.disconnect(); this.visibilityObserver.disconnect(); for(const remove of this.listeners)remove(); stages.delete(this);pruneModels(); }
+  dispose() { this.destroyed=true; this.cancel(); this.endEntrance(); this.resizeObserver.disconnect(); this.visibilityObserver.disconnect(); for(const remove of this.listeners)remove(); stages.delete(this);pruneModels(); }
 }
 
 document.addEventListener('visibilitychange',()=>{ if(document.hidden){cancelAnimationFrame(frame);frame=0;}else{for(const stage of stages)stage.draw();wake();} });
