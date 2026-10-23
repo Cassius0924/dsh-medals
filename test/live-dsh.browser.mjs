@@ -1,0 +1,72 @@
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {readFile,writeFile} from 'node:fs/promises';
+import {chromium} from '/opt/deepseek-harness/node_modules/.pnpm/playwright@1.61.1/node_modules/playwright/index.mjs';
+const origin=process.env.DSH_TEST_ORIGIN??'http://127.0.0.1:3080';
+const launchOrigin='http://127.0.0.1:3080';
+const log=execFileSync('journalctl',['-u','dsh.service','-b','--no-pager','-n','7000'],{maxBuffer:8*1024*1024,encoding:'utf8'});
+const launch=[...log.matchAll(/https?:\/\/[^\s]+\?token=[A-Za-z0-9_-]+/g)].map(m=>m[0]).filter(s=>new URL(s).origin===launchOrigin).at(-1);
+if(!launch)throw new Error('No live DSH authentication launch URL available');
+const exchange=await fetch(new URL(new URL(launch).pathname+new URL(launch).search,origin),{redirect:'manual',signal:AbortSignal.timeout(10000)}).catch(()=>{throw new Error('DSH login exchange failed');});
+assert.equal(exchange.status,303,'Live launch-token exchange should issue a cookie');
+const cookies=exchange.headers.getSetCookie().map(line=>{const [pair]=line.split(';');const i=pair.indexOf('=');return{name:pair.slice(0,i),value:pair.slice(i+1),domain:new URL(origin).hostname,path:'/',httpOnly:true,sameSite:'Strict',secure:new URL(origin).protocol==='https:'};});
+assert(cookies.length>0);
+const cookieHeader=cookies.map(c=>`${c.name}=${c.value}`).join('; ');
+const response=await fetch(origin+'/api/dsh-medals/status',{headers:{cookie:cookieHeader},signal:AbortSignal.timeout(120000)});
+assert.equal(response.status,200);
+const status=await response.json();assert.equal(status.complete,true);assert(status.total>0);assert(status.challenges.awards.length>0);assert.equal(status.challenges.rules.length,22);
+const anonymous=await fetch(origin+'/api/dsh-medals/status',{signal:AbortSignal.timeout(10000)});assert.equal(anonymous.status,401);
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+const errors=[],baselineErrors=[],scriptFailures=[];
+try{
+ const context=await browser.newContext({viewport:{width:1440,height:960},reducedMotion:'reduce',locale:'zh-CN'});await context.addCookies(cookies);
+ const page=await context.newPage();page.on('pageerror',e=>{if(e.message.startsWith('sessions.retain: unknown session'))baselineErrors.push(e.message);else errors.push(e.message);});
+ page.on('requestfailed',r=>{if(r.resourceType()==='script')scriptFailures.push({path:new URL(r.url()).pathname,error:r.failure()?.errorText});});
+ await page.goto(origin,{waitUntil:'domcontentloaded',timeout:120000});
+ const nav=page.getByRole('button',{name:/^(奖牌馆|Medals)$/});await nav.waitFor({timeout:60000});
+ const account=page.locator('.bt-account').first();
+ if(await account.count()){await account.click();await page.getByRole('menuitem',{name:/切换经典 Agent 模式|Switch to classic Agent mode/}).click();}
+ await page.getByRole('button',{name:/^(插件|连接插件)$/}).first().click();
+ await nav.click();await page.locator('.dsh-medals-panel').waitFor();
+ const frame=page.frameLocator('iframe.dsh-medals-panel-frame');
+ await frame.locator('#collection-summary').filter({hasText:'枚已收藏'}).waitFor({timeout:120000});
+ assert.equal(await page.locator('.dsh-medals-panel').evaluate(e=>e.closest('dialog')===null),true);
+ assert.equal(await frame.locator('#return-session').isVisible(),false);
+ const ledger=JSON.parse(await readFile('/root/.dsh/storages/dsh-medals/ledger.json','utf8')),readable=new Set(Object.keys(ledger.sessions));
+ let originKey;
+ for(let i=0;i<12&&!originKey;i++){
+  const keys=await page.locator('[data-row-key^="session:"]:visible').evaluateAll(es=>es.map(e=>e.getAttribute('data-row-key')));
+  originKey=keys.find(key=>readable.has(key.slice(8)));
+  if(!originKey){const collapsed=page.locator('[data-row-key^="workspace:"][aria-expanded="false"]').first();if(!await collapsed.count())break;await collapsed.click();}
+ }
+ assert(originKey,'A readable existing conversation must be available for return navigation');
+ const row=()=>page.locator(`[data-row-key="${originKey}"]`);
+ await row().click();await page.locator('.dsh-medals-panel').waitFor({state:'detached'});
+ assert.equal(await row().getAttribute('aria-selected'),'true');
+ await nav.click();await frame.locator('#collection-summary').filter({hasText:'枚已收藏'}).waitFor({timeout:120000});
+ await frame.locator('#return-session').waitFor();
+ assert.equal(await frame.locator('#return-session').evaluate(e=>getComputedStyle(e).position),'fixed');
+ assert.equal(await frame.locator('#collection-grid .medal-card').count(),22);
+ assert.equal(new Set(status.challenges.rules.filter(r=>r.design!=='numeric').map(r=>r.design)).size,12);
+ assert.deepEqual(status.challenges.rules.filter(r=>r.unit==='day').map(r=>r.target),[5e6,10e6,20e6]);
+ assert.equal(await frame.locator('#hero-canvas').evaluate(()=>MedalStage.diagnostics.webgl),true);
+ await page.screenshot({path:new URL('../evidence/live-dsh-desktop.png',import.meta.url).pathname,fullPage:true});
+ await frame.locator('#collection-grid [data-medal="tokens-500M"]').click();await frame.locator('[data-orient="back"]').click();
+ assert.equal(await frame.locator('.rotate-controls').isVisible(),true);await frame.locator('#detail-close').click();
+ await frame.locator('[data-view="progress"]').click();assert.equal(await frame.locator('.task').count(),3);assert.match(await frame.locator('#task-list').textContent(),/5M/);
+ await frame.locator('[data-period="week"]').click();assert.equal(await frame.locator('.task').count(),5);
+ await frame.locator('[data-period="month"]').click();assert.match(await frame.locator('#task-list').textContent(),/200M/);
+ await frame.locator('[data-view="collection"]').click();await frame.locator('#debug-toggle').click();
+ assert.equal(await frame.locator('#collection-grid .medal-locked').count(),0);
+ await frame.locator('#collection-grid [data-medal="tokens-10B"]').click();assert.equal(await frame.locator('.rotate-controls').isVisible(),true);
+ await page.screenshot({path:new URL('../evidence/live-debug-earned.png',import.meta.url).pathname,fullPage:true});await frame.locator('#detail-close').click();
+ await frame.locator('[data-debug-state="locked"]').click();assert.equal(await frame.locator('#collection-grid .medal-locked').count(),22);
+ await frame.locator('#debug-toggle').click();assert.equal(await frame.locator('#unlocked-count').textContent(),String(new Set(status.challenges.awards.map(a=>a.ruleId)).size));
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:new URL('../evidence/live-dsh-mobile.png',import.meta.url).pathname,fullPage:true});
+ assert.equal(await frame.locator('body').evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ await frame.locator('#return-session').click();await page.locator('.dsh-medals-panel').waitFor({state:'detached'});
+ await page.setViewportSize({width:1440,height:960});assert.equal(await row().getAttribute('aria-selected'),'true');await page.locator(`[data-conversation-session="${originKey.slice(8)}"]`).waitFor();
+ assert.deepEqual(errors,[]);assert.deepEqual(scriptFailures,[]);
+ const result={passed:true,origin,nativeMainPanel:true,returnToOriginalSession:true,fixedDailyThresholds:[5e6,10e6,20e6],distinctSculpturalMotifs:12,authenticated:true,anonymousStatus:anonymous.status,sessionCount:status.sessionCount,total:status.total,challengeKinds:status.challenges.rules.length,challengeAwards:status.challenges.awards.length,webgl:true,browserErrors:errors,scriptFailures,baselineHostErrors:baselineErrors};
+ await writeFile(new URL('../evidence/live-deployment.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+}catch(error){const page=browser.contexts()[0]?.pages()[0];await page?.screenshot({path:new URL('../evidence/native-panel-diagnostic.png',import.meta.url).pathname,fullPage:true}).catch(()=>{});console.error(JSON.stringify({error:error.message,errors,baselineErrors,scriptFailures}));throw error;}finally{await browser.close();}

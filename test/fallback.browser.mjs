@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {createServer} from 'node:http';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {join} from 'node:path';
+import {chromium} from '/opt/deepseek-harness/node_modules/.pnpm/playwright@1.61.1/node_modules/playwright/index.mjs';
+import {createHandler} from '../src/http.js';
+import {MedalsService} from '../src/service.js';
+import {Ledger} from '../src/store.js';
+const dir=await mkdtemp(join(process.env.TMPDIR,'medals-fallback-')),events=[];let revision=0;
+const persistence={list:async()=>[{header:{id:'fallback-test'},revision}],open:async()=>({inheritedEventCount:0,read:async offset=>({events:events.slice(offset,offset+512)}),close:async()=>{}})};
+const service=new MedalsService({persistence,ledger:new Ledger(join(dir,'ledger.json'),'Asia/Shanghai'),clock:()=>Date.parse('2026-10-23T04:00:00Z')});
+const server=createServer(createHandler({service,admit:()=>({peer:{}}),uiRoot:new URL('../lib/ui/',import.meta.url)}));await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+try{
+ const context=await browser.newContext({viewport:{width:1024,height:768},reducedMotion:'reduce'});
+ await context.addInitScript(()=>{window.webglRequests=0;const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){if(/webgl/i.test(type)){window.webglRequests++;return null;}return get.call(this,type,...args);};});
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(`http://127.0.0.1:${server.address().port}/api/dsh-medals/ui/?lang=zh`);
+ await page.locator('.medal-card').first().waitFor();assert.equal(await page.locator('#unlocked-count').textContent(),'0');
+ assert.equal(await page.evaluate(()=>window.webglRequests),0,'locked outlines need no GPU');
+ await page.locator('#hero-open').click();assert.equal(await page.locator('#detail-fallback').isVisible(),false);assert.equal(await page.locator('.rotate-controls').isVisible(),false);
+ await page.locator('#detail-close').click();
+ events.push({type:'assistant/message',time:Date.parse('2026-10-23T04:00:00Z'),data:{turn:0,step:0,usage:{inputTokens:10e6,outputTokens:0}}});revision++;
+ await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.locator('#reveal-trigger').waitFor();
+ await page.locator('#collection-grid [data-medal="daily-1"]').click();
+ assert.equal(await page.locator('#detail-fallback').isVisible(),true);
+ const canvas=page.locator('#detail-canvas');const hash=b=>createHash('sha256').update(b).digest('hex');const front=hash(await canvas.screenshot());
+ await page.locator('[data-orient="back"]').click();assert.notEqual(hash(await canvas.screenshot()),front);
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,noWebGL:true,zeroUsageEmptyState:true,lockedOutlineOnly:true,earnedNumericFrontBack:true,errors}));
+}finally{await browser.close();await new Promise(r=>server.close(r));await rm(dir,{recursive:true,force:true});}

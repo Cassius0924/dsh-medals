@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T09:05:00Z",
+  "title": "Design System: DSH Medals",
+  "extensions": {
+    "colorMeta": {
+      "gallery": {
+        "role": "neutral",
+        "displayName": "Gallery White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(26% 0.00000 89.88)",
+          "oklch(38% 0.00000 89.88)",
+          "oklch(49% 0.00000 89.88)",
+          "oklch(61% 0.00000 89.88)",
+          "oklch(72% 0.00000 89.88)",
+          "oklch(84% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#111111",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(26% 0.00000 89.88)",
+          "oklch(38% 0.00000 89.88)",
+          "oklch(49% 0.00000 89.88)",
+          "oklch(61% 0.00000 89.88)",
+          "oklch(72% 0.00000 89.88)",
+          "oklch(84% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ]
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Action Blue",
+        "canonical": "#1677ff",
+        "tonalRamp": [
+          "oklch(15% 0.21935 259.04)",
+          "oklch(26% 0.21935 259.04)",
+          "oklch(38% 0.21935 259.04)",
+          "oklch(49% 0.21935 259.04)",
+          "oklch(61% 0.21935 259.04)",
+          "oklch(72% 0.21935 259.04)",
+          "oklch(84% 0.21935 259.04)",
+          "oklch(95% 0.21935 259.04)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Quiet Surface",
+        "canonical": "#f7f8fa",
+        "tonalRamp": [
+          "oklch(15% 0.00287 264.54)",
+          "oklch(26% 0.00287 264.54)",
+          "oklch(38% 0.00287 264.54)",
+          "oklch(49% 0.00287 264.54)",
+          "oklch(61% 0.00287 264.54)",
+          "oklch(72% 0.00287 264.54)",
+          "oklch(84% 0.00287 264.54)",
+          "oklch(95% 0.00287 264.54)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#6b7280",
+        "tonalRamp": [
+          "oklch(15% 0.02336 264.36)",
+          "oklch(26% 0.02336 264.36)",
+          "oklch(38% 0.02336 264.36)",
+          "oklch(49% 0.02336 264.36)",
+          "oklch(61% 0.02336 264.36)",
+          "oklch(72% 0.02336 264.36)",
+          "oklch(84% 0.02336 264.36)",
+          "oklch(95% 0.02336 264.36)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#d9dee7",
+        "tonalRamp": [
+          "oklch(15% 0.01343 262.38)",
+          "oklch(26% 0.01343 262.38)",
+          "oklch(38% 0.01343 262.38)",
+          "oklch(49% 0.01343 262.38)",
+          "oklch(61% 0.01343 262.38)",
+          "oklch(72% 0.01343 262.38)",
+          "oklch(84% 0.01343 262.38)",
+          "oklch(95% 0.01343 262.38)"
+        ]
+      },
+      "chamber": {
+        "role": "neutral",
+        "displayName": "Chamber",
+        "canonical": "#14191e",
+        "tonalRamp": [
+          "oklch(15% 0.01251 248.42)",
+          "oklch(26% 0.01251 248.42)",
+          "oklch(38% 0.01251 248.42)",
+          "oklch(49% 0.01251 248.42)",
+          "oklch(61% 0.01251 248.42)",
+          "oklch(72% 0.01251 248.42)",
+          "oklch(84% 0.01251 248.42)",
+          "oklch(95% 0.01251 248.42)"
+        ]
+      },
+      "chamber-inset": {
+        "role": "neutral",
+        "displayName": "Chamber Inset",
+        "canonical": "#1c232a",
+        "tonalRamp": [
+          "oklch(15% 0.01672 248.49)",
+          "oklch(26% 0.01672 248.49)",
+          "oklch(38% 0.01672 248.49)",
+          "oklch(49% 0.01672 248.49)",
+          "oklch(61% 0.01672 248.49)",
+          "oklch(72% 0.01672 248.49)",
+          "oklch(84% 0.01672 248.49)",
+          "oklch(95% 0.01672 248.49)"
+        ]
+      },
+      "chamber-text": {
+        "role": "neutral",
+        "displayName": "Chamber Text",
+        "canonical": "#f4f3ee",
+        "tonalRamp": [
+          "oklch(15% 0.00672 97.35)",
+          "oklch(26% 0.00672 97.35)",
+          "oklch(38% 0.00672 97.35)",
+          "oklch(49% 0.00672 97.35)",
+          "oklch(61% 0.00672 97.35)",
+          "oklch(72% 0.00672 97.35)",
+          "oklch(84% 0.00672 97.35)",
+          "oklch(95% 0.00672 97.35)"
+        ]
+      },
+      "chamber-muted": {
+        "role": "neutral",
+        "displayName": "Chamber Muted",
+        "canonical": "#a8b0b8",
+        "tonalRamp": [
+          "oklch(15% 0.01459 248.02)",
+          "oklch(26% 0.01459 248.02)",
+          "oklch(38% 0.01459 248.02)",
+          "oklch(49% 0.01459 248.02)",
+          "oklch(61% 0.01459 248.02)",
+          "oklch(72% 0.01459 248.02)",
+          "oklch(84% 0.01459 248.02)",
+          "oklch(95% 0.01459 248.02)"
+        ]
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "Collection Gold",
+        "canonical": "#e4c88d",
+        "tonalRamp": [
+          "oklch(15% 0.08239 85.30)",
+          "oklch(26% 0.08239 85.30)",
+          "oklch(38% 0.08239 85.30)",
+          "oklch(49% 0.08239 85.30)",
+          "oklch(61% 0.08239 85.30)",
+          "oklch(72% 0.08239 85.30)",
+          "oklch(84% 0.08239 85.30)",
+          "oklch(95% 0.08239 85.30)"
+        ]
+      },
+      "enamel-raspberry": {
+        "role": "secondary",
+        "displayName": "Raspberry Enamel",
+        "canonical": "#a21649",
+        "tonalRamp": [
+          "oklch(15% 0.17353 6.93)",
+          "oklch(26% 0.17353 6.93)",
+          "oklch(38% 0.17353 6.93)",
+          "oklch(49% 0.17353 6.93)",
+          "oklch(61% 0.17353 6.93)",
+          "oklch(72% 0.17353 6.93)",
+          "oklch(84% 0.17353 6.93)",
+          "oklch(95% 0.17353 6.93)"
+        ]
+      },
+      "enamel-teal": {
+        "role": "secondary",
+        "displayName": "Teal Enamel",
+        "canonical": "#075b5d",
+        "tonalRamp": [
+          "oklch(15% 0.07079 197.52)",
+          "oklch(26% 0.07079 197.52)",
+          "oklch(38% 0.07079 197.52)",
+          "oklch(49% 0.07079 197.52)",
+          "oklch(61% 0.07079 197.52)",
+          "oklch(72% 0.07079 197.52)",
+          "oklch(84% 0.07079 197.52)",
+          "oklch(95% 0.07079 197.52)"
+        ]
+      },
+      "enamel-plum": {
+        "role": "secondary",
+        "displayName": "Plum Enamel",
+        "canonical": "#482340",
+        "tonalRamp": [
+          "oklch(15% 0.07064 335.77)",
+          "oklch(26% 0.07064 335.77)",
+          "oklch(38% 0.07064 335.77)",
+          "oklch(49% 0.07064 335.77)",
+          "oklch(61% 0.07064 335.77)",
+          "oklch(72% 0.07064 335.77)",
+          "oklch(84% 0.07064 335.77)",
+          "oklch(95% 0.07064 335.77)"
+        ]
+      },
+      "enamel-consistency-blue": {
+        "role": "secondary",
+        "displayName": "Consistency Blue Enamel",
+        "canonical": "#214e7d",
+        "tonalRamp": [
+          "oklch(15% 0.09302 251.86)",
+          "oklch(26% 0.09302 251.86)",
+          "oklch(38% 0.09302 251.86)",
+          "oklch(49% 0.09302 251.86)",
+          "oklch(61% 0.09302 251.86)",
+          "oklch(72% 0.09302 251.86)",
+          "oklch(84% 0.09302 251.86)",
+          "oklch(95% 0.09302 251.86)"
+        ]
+      },
+      "medal-silver": {
+        "role": "secondary",
+        "displayName": "Medal Silver",
+        "canonical": "#bdc5ce",
+        "tonalRamp": [
+          "oklch(15% 0.01541 251.18)",
+          "oklch(26% 0.01541 251.18)",
+          "oklch(38% 0.01541 251.18)",
+          "oklch(49% 0.01541 251.18)",
+          "oklch(61% 0.01541 251.18)",
+          "oklch(72% 0.01541 251.18)",
+          "oklch(84% 0.01541 251.18)",
+          "oklch(95% 0.01541 251.18)"
+        ]
+      },
+      "medal-silver-polished": {
+        "role": "secondary",
+        "displayName": "Medal Silver Polished",
+        "canonical": "#edf0f5",
+        "tonalRamp": [
+          "oklch(15% 0.00744 260.73)",
+          "oklch(26% 0.00744 260.73)",
+          "oklch(38% 0.00744 260.73)",
+          "oklch(49% 0.00744 260.73)",
+          "oklch(61% 0.00744 260.73)",
+          "oklch(72% 0.00744 260.73)",
+          "oklch(84% 0.00744 260.73)",
+          "oklch(95% 0.00744 260.73)"
+        ]
+      },
+      "medal-gold": {
+        "role": "secondary",
+        "displayName": "Medal Gold",
+        "canonical": "#c6a05b",
+        "tonalRamp": [
+          "oklch(15% 0.09843 81.11)",
+          "oklch(26% 0.09843 81.11)",
+          "oklch(38% 0.09843 81.11)",
+          "oklch(49% 0.09843 81.11)",
+          "oklch(61% 0.09843 81.11)",
+          "oklch(72% 0.09843 81.11)",
+          "oklch(84% 0.09843 81.11)",
+          "oklch(95% 0.09843 81.11)"
+        ]
+      },
+      "medal-gold-polished": {
+        "role": "secondary",
+        "displayName": "Medal Gold Polished",
+        "canonical": "#f3d18c",
+        "tonalRamp": [
+          "oklch(15% 0.09502 84.34)",
+          "oklch(26% 0.09502 84.34)",
+          "oklch(38% 0.09502 84.34)",
+          "oklch(49% 0.09502 84.34)",
+          "oklch(61% 0.09502 84.34)",
+          "oklch(72% 0.09502 84.34)",
+          "oklch(84% 0.09502 84.34)",
+          "oklch(95% 0.09502 84.34)"
+        ]
+      },
+      "sculptural-gold": {
+        "role": "secondary",
+        "displayName": "Sculptural Gold",
+        "canonical": "#deb976",
+        "tonalRamp": [
+          "oklch(15% 0.09525 81.55)",
+          "oklch(26% 0.09525 81.55)",
+          "oklch(38% 0.09525 81.55)",
+          "oklch(49% 0.09525 81.55)",
+          "oklch(61% 0.09525 81.55)",
+          "oklch(72% 0.09525 81.55)",
+          "oklch(84% 0.09525 81.55)",
+          "oklch(95% 0.09525 81.55)"
+        ]
+      },
+      "sculptural-gold-polished": {
+        "role": "secondary",
+        "displayName": "Sculptural Gold Polished",
+        "canonical": "#ffe8b5",
+        "tonalRamp": [
+          "oklch(15% 0.07016 86.54)",
+          "oklch(26% 0.07016 86.54)",
+          "oklch(38% 0.07016 86.54)",
+          "oklch(49% 0.07016 86.54)",
+          "oklch(61% 0.07016 86.54)",
+          "oklch(72% 0.07016 86.54)",
+          "oklch(84% 0.07016 86.54)",
+          "oklch(95% 0.07016 86.54)"
+        ]
+      },
+      "pearl-enamel": {
+        "role": "secondary",
+        "displayName": "Pearl Enamel",
+        "canonical": "#eee6d4",
+        "tonalRamp": [
+          "oklch(15% 0.02546 86.87)",
+          "oklch(26% 0.02546 86.87)",
+          "oklch(38% 0.02546 86.87)",
+          "oklch(49% 0.02546 86.87)",
+          "oklch(61% 0.02546 86.87)",
+          "oklch(72% 0.02546 86.87)",
+          "oklch(84% 0.02546 86.87)",
+          "oklch(95% 0.02546 86.87)"
+        ]
+      },
+      "enamel-evergreen": {
+        "role": "material",
+        "displayName": "Evergreen Enamel",
+        "canonical": "#164b3c"
+      },
+      "jade-leaf": {
+        "role": "material",
+        "displayName": "Jade Leaf",
+        "canonical": "#65a889"
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Page title",
+        "purpose": "Gallery heading, reduced on mobile."
+      },
+      "object-title": {
+        "displayName": "Object title",
+        "purpose": "Latest earned collectible."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base interface rhythm."
+      },
+      "label": {
+        "displayName": "Control label",
+        "purpose": "Ordinary action labels."
+      },
+      "metadata": {
+        "displayName": "Metadata",
+        "purpose": "Supporting records and context."
+      },
+      "medal-numeral": {
+        "displayName": "Medal numeral",
+        "purpose": "Baskervville lining outlines, weight 500, extruded as complete raised metal lettering; shared with locked linework."
+      }
+    },
+    "shadows": [
+      {
+        "name": "object-tray",
+        "value": "drop-shadow(0 8px 6px #11111114)",
+        "purpose": "Unlocked tray art."
+      },
+      {
+        "name": "stage-object",
+        "value": "drop-shadow(0 24px 16px #00000066)",
+        "purpose": "Latest-object art."
+      },
+      {
+        "name": "dialog",
+        "value": "0 24px 80px #00000055",
+        "purpose": "Modal separation."
+      },
+      {
+        "name": "feedback",
+        "value": "0 8px 32px #11111112",
+        "purpose": "Transient toast."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "200ms ease-out",
+        "purpose": "Background and card-lift transitions."
+      },
+      {
+        "name": "object-reveal",
+        "value": "400ms ease-out",
+        "purpose": "Opacity and 16px rise; disabled for reduced motion."
+      },
+      {
+        "name": "title-reveal",
+        "value": "300ms ease-out",
+        "purpose": "Title reveal; disabled for reduced motion."
+      },
+      {
+        "name": "orientation",
+        "value": "650ms quartic ease-out",
+        "purpose": "Earned-object front/back/reset rotation; reduced motion and static fallback switch immediately."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1440px"
+      },
+      {
+        "name": "compact",
+        "value": "1100px"
+      },
+      {
+        "name": "stacked",
+        "value": "767px"
+      },
+      {
+        "name": "phone",
+        "value": "479px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Outline action",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Quiet gallery action.",
+      "html": "<button class=\"ds-outline\">重新同步</button>",
+      "css": ".ds-outline{font:400 14px/1.6 var(--font,system-ui,sans-serif);cursor:pointer;min-height:44px;padding:8px 16px;border:1px solid var(--line,#d9dee7);border-radius:8px;background:var(--bg,#ffffff);color:var(--ink,#111111);transition:background 200ms ease-out}.ds-outline:hover{background:var(--surface,#f7f8fa)}.ds-outline:focus-visible{outline:3px solid var(--blue,#1677ff);outline-offset:4px}"
+    },
+    {
+      "name": "Collection tabs",
+      "kind": "nav",
+      "description": "Local collection/challenge view switch.",
+      "html": "<nav class=\"ds-tabs\" aria-label=\"奖牌馆视图\"><button class=\"ds-tab ds-selected\">收藏馆</button><button class=\"ds-tab\">挑战</button></nav>",
+      "css": ".ds-tabs{display:flex;gap:32px;border-bottom:1px solid var(--line,#d9dee7)}.ds-tab{font:400 14px/1.6 var(--font,system-ui,sans-serif);cursor:pointer;background:transparent;border:0;position:relative;min-height:44px;padding:0 0 12px;color:var(--muted,#6b7280)}.ds-tab.ds-selected{color:var(--ink,#111111);font-weight:600}.ds-selected:after{content:\"\";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--ink,#111111)}.ds-tab:hover{color:var(--ink,#111111)}.ds-tab:focus-visible{outline:3px solid var(--blue,#1677ff);outline-offset:4px}"
+    },
+    {
+      "name": "Series filter",
+      "kind": "chip",
+      "refersTo": "filter-selected",
+      "description": "Wrapping series selection.",
+      "html": "<button class=\"ds-filter\" aria-pressed=\"true\">每日</button>",
+      "css": ".ds-filter{font:400 14px/1.6 var(--font,system-ui,sans-serif);cursor:pointer;font-size:12px;min-height:36px;padding:4px 12px;border:0;border-radius:4px;background:var(--surface,#f7f8fa);color:var(--ink,#111111);font-weight:600}.ds-filter:hover{background:var(--surface,#f7f8fa)}.ds-filter:focus-visible{outline:3px solid var(--blue,#1677ff);outline-offset:4px}"
+    },
+    {
+      "name": "Medal tray",
+      "kind": "card",
+      "refersTo": "medal-surface",
+      "description": "Collection tray with supporting achievement metadata.",
+      "html": "<button class=\"ds-card\"><span class=\"ds-art\">奖牌轮廓</span><strong class=\"ds-name\">每日达标</strong><span class=\"ds-meta\">每日挑战 · 日常</span></button>",
+      "css": ".ds-card{font:400 14px/1.6 var(--font,system-ui,sans-serif);cursor:pointer;display:grid;gap:4px;width:180px;padding:0;text-align:left;border:0;border-radius:8px;background:transparent;color:var(--ink,#111111);transition:transform 200ms ease-out}.ds-art{display:grid;place-items:center;height:148px;margin-bottom:8px;border:1px solid var(--line,#d9dee7);border-radius:8px;background:var(--surface,#f7f8fa);color:var(--muted,#6b7280);font-size:11px}.ds-name{font-size:14px;font-weight:550}.ds-meta{font-size:11px;color:var(--muted,#6b7280)}.ds-card:hover{transform:translateY(-4px)}.ds-card:hover .ds-art{border-color:var(--muted,#6b7280)}.ds-card:focus-visible{outline:3px solid var(--blue,#1677ff);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-card{transition:none}.ds-card:hover{transform:none}}"
+    },
+    {
+      "name": "Chamber controls",
+      "kind": "custom",
+      "description": "Explicit earned-object orientation controls.",
+      "html": "<div class=\"ds-chamber\"><div class=\"ds-controls\"><button class=\"ds-orient\">正面</button><button class=\"ds-orient\">背面</button><button class=\"ds-orient ds-active\">重置</button></div></div>",
+      "css": ".ds-chamber{padding:24px;background:var(--stage,#14191e);border-radius:8px}.ds-controls{display:flex;justify-content:center;gap:8px}.ds-orient{font:400 14px/1.6 var(--font,system-ui,sans-serif);cursor:pointer;font-size:12px;color:var(--stage-text,#f4f3ee);background:transparent;min-height:44px;padding:8px 16px;border:1px solid #555e67;border-radius:8px}.ds-orient.ds-active{background:#303941;border-color:#78838c}.ds-orient:hover{background:#ffffff12}.ds-orient:focus-visible{outline:3px solid var(--blue,#1677ff);outline-offset:4px}"
+    },
+    {
+      "name": "Debug state controls",
+      "kind": "custom",
+      "description": "Clearly labeled read-only full-collection appearance preview.",
+      "html": "<section class=\"ds-debug\"><div><strong>Debug 样式预览</strong><p>仅预览外观，真实收藏不变。</p></div><div class=\"ds-debug-states\"><button aria-pressed=\"true\">全部已获得</button><button aria-pressed=\"false\">全部未获得</button></div></section>",
+      "css": ".ds-debug{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border:1px solid var(--line,#d9dee7);border-radius:8px;background:var(--surface,#f7f8fa);font:400 14px/1.6 var(--font,system-ui,sans-serif);color:var(--ink,#111111)}.ds-debug strong{font-size:14px}.ds-debug p{font-size:12px;color:var(--muted,#6b7280);margin:4px 0 0}.ds-debug-states{display:flex;gap:8px;flex-shrink:0}.ds-debug-states button{font:inherit;font-size:13px;min-height:44px;padding:8px 16px;border:1px solid var(--line,#d9dee7);border-radius:8px;background:var(--bg,#ffffff);color:var(--ink,#111111);cursor:pointer}.ds-debug-states button[aria-pressed=\"true\"]{background:var(--ink,#111111);color:var(--bg,#ffffff);border-color:var(--ink,#111111)}.ds-debug-states button:focus-visible{outline:3px solid var(--blue,#1677ff);outline-offset:2px}@media(max-width:767px){.ds-debug{align-items:flex-start;flex-direction:column}.ds-debug-states{width:100%}.ds-debug-states button{flex:1;padding-inline:8px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Personal Collection",
+    "overview": "White gallery space makes the objects, not the interface, the subject. Dark viewing chambers isolate reflective metal and enamel so a medal reads as a collectible physical object.\n\nOrdinary achievements use the 珐琅圆章 family: complete raised serif numerals on shallow convex enamel fields, with distinct perimeter shapes and metal finishes for each series. Rarer achievements gain layered silhouettes, intricate metalwork and richer material effects. The perfect-month piece is an eight-petal gold and pearl rosette with individually framed petals, a ridged gold inner starburst and a central crystal setting.\n\nUsage, growth and lifetime achievements also use named sculptural motifs: orbital structures, moon relief, ascending folds, radiating dawn, stepped milestones and a three-dimensional infinity loop. Each sculptural challenge uses its own motif, silhouette and internal linework. These are collection objects rather than numerical discs. When available, an earned sculptural piece leads the featured stage.",
+    "keyCharacteristics": [
+      "Quiet white collection space; concentrated dark object viewing.",
+      "Real reflective depth and front/back exploration after unlocking.",
+      "Sparse controls, fine borders and gently curved surfaces.",
+      "Complexity grows with achievement difficulty."
+    ],
+    "rules": [
+      {
+        "name": "The Object Owns Color Rule",
+        "body": "Keep interface surfaces neutral; numeric series identity belongs to raspberry daily, teal weekly, plum monthly and blue lifetime consistency enamel. Preserve each sculptural motif’s own material palette.",
+        "section": "colors"
+      },
+      {
+        "name": "The Complete Lettering Rule",
+        "body": "Keep each numeral a complete independent raised form, preserving its counters and its separation from the perimeter. Use the same glyph outlines in the locked drawing.",
+        "section": "typography"
+      },
+      {
+        "name": "The Host Owns Navigation Rule",
+        "body": "Local tabs switch collection and challenges; DSH navigation stays outside the plugin.",
+        "section": "layout"
+      },
+      {
+        "name": "The Earned Depth Rule",
+        "body": "Locked objects remain line-only drawings: no material disclosure, 3D context, reverse view or rotation. Full depth and finish begin at unlock.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep the gallery neutral and reserve concentrated color and reflection for the collectible.",
+      "**Do** use complete raised Baskervville lining numerals over convex guilloche enamel for number-led medals.",
+      "**Do** make locked and earned states visibly and interactively distinct.",
+      "**Do** preserve the host’s navigation, responsive grids and keyboard access.",
+      "**Do** respect reduced motion and retain front/back fallback for every earned medal."
+    ],
+    "donts": [
+      "**Don't** expose a locked medal’s finish, back or rotation.",
+      "**Don't** give ordinary numeric achievements the same construction complexity as rare high-tier objects.",
+      "**Don't** turn chamber lighting into a universal background treatment for ordinary forms and lists.",
+      "**Don't** treat unused legacy-sidebar CSS or tiny decorative uppercase captions as new component standards."
+    ]
+  }
+}

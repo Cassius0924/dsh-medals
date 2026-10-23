@@ -1,0 +1,76 @@
+{
+  "name": "@cassius0924/dsh-medals",
+  "version": "0.4.0",
+  "description": "Personal 3D medals for DeepSeek Harness token-usage achievements",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-workspace",
+        "@deepseek-ai/dsh-api-session-controller"
+      ]
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.js",
+    "prepack": "node build.mjs",
+    "test:browser": "node test/i18n-layout.browser.mjs"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.1-rc.2 <0.3.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.0",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "react": "^18.2.0",
+    "playwright": "1.61.1"
+  },
+  "license": "MIT",
+  "author": "Cassius0924",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cassius0924/dsh-medals.git"
+  },
+  "homepage": "https://github.com/Cassius0924/dsh-medals#readme",
+  "bugs": {
+    "url": "https://github.com/Cassius0924/dsh-medals/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "medals",
+    "tokens",
+    "achievements"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  }
+}
