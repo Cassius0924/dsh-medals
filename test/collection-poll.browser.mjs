@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {mkdtemp,rm} from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {createHandler} from '../src/http.js';
 import {MedalsService} from '../src/service.js';
 import {Ledger} from '../src/store.js';
 
-const dir=await mkdtemp(join(process.env.TMPDIR,'medals-poll-'));
+const dir=await mkdtemp(join(tmpdir(),'medals-poll-'));
 const service=new MedalsService({persistence:{list:async()=>[]},ledger:new Ledger(join(dir,'ledger.json'),'Asia/Shanghai')});
 const server=createServer(createHandler({service,admit:()=>({peer:{}}),uiRoot:new URL('../lib/ui/',import.meta.url)}));
 await new Promise(r=>server.listen(0,'127.0.0.1',r));

@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {mkdtemp,rm} from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {Ledger} from '../src/store.js';
 import {MedalsService} from '../src/service.js';
 import {createHandler} from '../src/http.js';
 
-const dir=await mkdtemp(join(process.env.TMPDIR,'medals-debug-'));
+const dir=await mkdtemp(join(tmpdir(),'medals-debug-'));
 const events=[{type:'assistant/message',time:Date.parse('2026-10-22T04:00:00Z'),data:{turn:0,step:0,usage:{inputTokens:600e6,outputTokens:0}}}];
 const persistence={list:async()=>[{header:{id:'preview-fixture'},revision:1}],open:async()=>({inheritedEventCount:0,read:async offset=>({events:events.slice(offset,offset+512)}),close:async()=>{}})};
 const service=new MedalsService({persistence,ledger:new Ledger(join(dir,'ledger.json'),'Asia/Shanghai'),clock:()=>Date.parse('2026-10-23T04:00:00Z')});

@@ -7,7 +7,15 @@ Repository: `Cassius0924/dsh-medals`
 
 The package owner must authenticate with npm (`npm login --auth-type=web`)
 and publish the initial public version with `npm publish --access public`.
-Configure a Trusted Publisher on the package's npm settings page:
+Configure a Trusted Publisher using npm 11.15 or newer:
+
+```sh
+npm trust github @cassius0924/dsh-medals --repo Cassius0924/dsh-medals --file publish.yml --allow-publish --yes
+npm trust list @cassius0924/dsh-medals
+```
+
+npm may open a browser for two-factor verification. The same configuration
+can also be entered on the package's npm settings page:
 
 | Field | Value |
 | --- | --- |

@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {mkdtemp,rm,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -7,7 +8,7 @@ import {tokenUsageProjectionDefinition as official} from '/opt/deepseek-harness/
 import {MedalsService} from '../src/service.js';
 import {foldUsage} from '../src/usage.js';
 import {Ledger} from '../src/store.js';
-const dir=await mkdtemp(join(process.env.TMPDIR,'medals-real-'));
+const dir=await mkdtemp(join(tmpdir(),'medals-real-'));
 const ctx=new Context();
 try {
  await ctx.plugin(jsonl,{root:'/root/.dsh/sessions',compression:'zstd'});

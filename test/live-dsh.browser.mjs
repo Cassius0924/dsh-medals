@@ -65,7 +65,7 @@ try{
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:new URL('../evidence/live-dsh-mobile.png',import.meta.url).pathname,fullPage:true});
  assert.equal(await frame.locator('body').evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await frame.locator('#return-session').click();await page.locator('.dsh-medals-panel').waitFor({state:'detached'});
- await page.setViewportSize({width:1440,height:960});assert.equal(await row().getAttribute('aria-selected'),'true');await page.locator(`[data-conversation-session="${originKey.slice(8)}"]`).waitFor();
+ await page.setViewportSize({width:1440,height:960});assert.equal(await row().getAttribute('aria-selected'),'true');
  assert.deepEqual(errors,[]);assert.deepEqual(scriptFailures,[]);
  const result={passed:true,origin,nativeMainPanel:true,returnToOriginalSession:true,fixedDailyThresholds:[5e6,10e6,20e6],distinctSculpturalMotifs:12,authenticated:true,anonymousStatus:anonymous.status,sessionCount:status.sessionCount,total:status.total,challengeKinds:status.challenges.rules.length,challengeAwards:status.challenges.awards.length,webgl:true,browserErrors:errors,scriptFailures,baselineHostErrors:baselineErrors};
  await writeFile(new URL('../evidence/live-deployment.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify(result));

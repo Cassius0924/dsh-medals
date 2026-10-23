@@ -1,10 +1,11 @@
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {Context} from '../node_modules/@deepseek-ai/cordis/lib/index.js';
 import WebServer from '/opt/deepseek-harness/packages/host/webserver/lib/index.js';
 import * as plugin from '../lib/index.js';
-const dir=await mkdtemp(join(process.env.TMPDIR,'medals-native-routing-'));
+const dir=await mkdtemp(join(tmpdir(),'medals-native-routing-'));
 const host=new Context(),cleanups=[];
 try {
  await host.plugin(WebServer,{host:'127.0.0.1',port:0});

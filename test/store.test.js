@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
@@ -9,7 +10,7 @@ const validAwards=()=>settle({'2026-09-01':20e6,'2026-10-05':5e6,'2026-10-12':10
 const validLedger=()=>({version:1,timeZone:'UTC',initialized:true,sessions:{s1:{daily:{'2026-10-19':600e6}}},awards:validAwards()});
 
 test('ledger transactions serialize writers and preserve permanent awards across restart', async () => {
-  const dir = await mkdtemp(join(process.env.TMPDIR,'medals-store-'));
+  const dir = await mkdtemp(join(tmpdir(),'medals-store-'));
   try {
     const path=join(dir,'ledger.json');
     assert.equal(typeof store.Ledger,'function');
@@ -27,7 +28,7 @@ test('ledger transactions serialize writers and preserve permanent awards across
 });
 
 test('ledger rejects malformed persisted awards without invoking changes or overwriting the file', async () => {
-  const dir=await mkdtemp(join(process.env.TMPDIR,'medals-invalid-awards-'));
+  const dir=await mkdtemp(join(tmpdir(),'medals-invalid-awards-'));
   const path=join(dir,'ledger.json');
   try {
     const ledger=new store.Ledger(path,'UTC');
@@ -65,7 +66,7 @@ test('ledger rejects malformed persisted awards without invoking changes or over
 });
 
 test('ledger rejects malformed persisted usage and ledger shapes without erasing usage', async () => {
-  const dir=await mkdtemp(join(process.env.TMPDIR,'medals-invalid-usage-'));
+  const dir=await mkdtemp(join(tmpdir(),'medals-invalid-usage-'));
   const path=join(dir,'ledger.json');
   try {
     const ledger=new store.Ledger(path,'UTC');

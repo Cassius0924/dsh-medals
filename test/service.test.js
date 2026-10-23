@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,rm} from 'node:fs/promises';
@@ -7,7 +8,7 @@ import * as services from '../src/service.js';
 const message=n=>({type:'assistant/message',time:Date.parse('2026-10-19T04:00:00Z'),data:{turn:1,step:0,usage:{inputTokens:n,outputTokens:0}}});
 
 test('real persistence scan backfills once, skips unchanged logs, and retains deleted-session awards', async () => {
-  const dir=await mkdtemp(join(process.env.TMPDIR,'medals-service-'));
+  const dir=await mkdtemp(join(tmpdir(),'medals-service-'));
   let events=[message(60e6)], reads=0, present=true;
   const persistence={list:async()=>present?[{header:{id:'s1'},revision:'r1'}]:[], open:async()=>({inheritedEventCount:0,read:async(offset)=>{reads++;return{events:offset?[]:events};},close:async()=>{}})};
   try {
@@ -23,7 +24,7 @@ test('real persistence scan backfills once, skips unchanged logs, and retains de
 });
 
 test('a partial scan cannot issue awards, restart rescans revisions, and acknowledgements persist', async () => {
-  const dir=await mkdtemp(join(process.env.TMPDIR,'medals-failure-'));
+  const dir=await mkdtemp(join(tmpdir(),'medals-failure-'));
   let revision='r1', n=1e6, fail=false;
   const persistence={list:async()=>[{header:{id:'s1'},revision},{header:{id:'s2'},revision}],open:async id=>{
     if(fail&&id==='s2')throw new Error('read failed');
@@ -43,7 +44,7 @@ test('a partial scan cannot issue awards, restart rescans revisions, and acknowl
 });
 
 test('format refusals are transparently excluded from readable-session accounting', async () => {
-  const dir=await mkdtemp(join(process.env.TMPDIR,'medals-format-'));
+  const dir=await mkdtemp(join(tmpdir(),'medals-format-'));
   const persistence={list:async()=>[{header:{id:'good'},revision:'g'},{header:{id:'legacy'},revision:'l'}],open:async id=>{
     if(id==='legacy')throw Object.assign(new Error('unsupported format'),{name:'SessionFormatUnsupportedError'});
     return{inheritedEventCount:0,read:async offset=>({events:offset?[]:[message(60e6)]}),close:async()=>{}};
@@ -55,7 +56,7 @@ test('format refusals are transparently excluded from readable-session accountin
 });
 
 test('service publishes persistent fixed challenge criteria',async()=>{
- const dir=await mkdtemp(join(process.env.TMPDIR,'medals-fixed-'));
+ const dir=await mkdtemp(join(tmpdir(),'medals-fixed-'));
  try{
   const options={ledger:new Ledger(join(dir,'ledger.json'),'UTC'),persistence:{list:async()=>[]},clock:()=>Date.parse('2026-10-23')};
   for(const service of [new services.MedalsService(options),new services.MedalsService(options)]){
@@ -66,7 +67,7 @@ test('service publishes persistent fixed challenge criteria',async()=>{
 });
 
 test('a committed acknowledgement survives unavailable follow-up synchronization',async()=>{
- const dir=await mkdtemp(join(process.env.TMPDIR,'medals-saved-ack-'));let fail=false;
+ const dir=await mkdtemp(join(tmpdir(),'medals-saved-ack-'));let fail=false;
  try{
   const path=join(dir,'ledger.json'),ledger=new Ledger(path,'UTC');
   const persistence={list:async()=>{if(fail)throw new Error('list failed');return[{header:{id:'s1'},revision:1}];},open:async()=>({inheritedEventCount:0,read:async offset=>({events:offset?[]:[message(60e6)]}),close:async()=>{}})};

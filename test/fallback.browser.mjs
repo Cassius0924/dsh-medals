@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {createServer} from 'node:http';
@@ -7,7 +8,7 @@ import {chromium} from '/opt/deepseek-harness/node_modules/.pnpm/playwright@1.61
 import {createHandler} from '../src/http.js';
 import {MedalsService} from '../src/service.js';
 import {Ledger} from '../src/store.js';
-const dir=await mkdtemp(join(process.env.TMPDIR,'medals-fallback-')),events=[];let revision=0;
+const dir=await mkdtemp(join(tmpdir(),'medals-fallback-')),events=[];let revision=0;
 const persistence={list:async()=>[{header:{id:'fallback-test'},revision}],open:async()=>({inheritedEventCount:0,read:async offset=>({events:events.slice(offset,offset+512)}),close:async()=>{}})};
 const service=new MedalsService({persistence,ledger:new Ledger(join(dir,'ledger.json'),'Asia/Shanghai'),clock:()=>Date.parse('2026-10-23T04:00:00Z')});
 const server=createServer(createHandler({service,admit:()=>({peer:{}}),uiRoot:new URL('../lib/ui/',import.meta.url)}));await new Promise(r=>server.listen(0,'127.0.0.1',r));

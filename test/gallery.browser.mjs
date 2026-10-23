@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {mkdtemp,rm,mkdir} from 'node:fs/promises';
@@ -6,7 +7,7 @@ import {chromium} from '/opt/deepseek-harness/node_modules/.pnpm/playwright@1.61
 import {Ledger} from '../src/store.js';
 import {MedalsService} from '../src/service.js';
 import {createHandler} from '../src/http.js';
-const dir=await mkdtemp(join(process.env.TMPDIR,'medals-browser-'));
+const dir=await mkdtemp(join(tmpdir(),'medals-browser-'));
 const events=[['2026-09-01',250e6],['2026-10-19',30e6]].map(([date,n],turn)=>({type:'assistant/message',time:Date.parse(date+'T04:00:00Z'),data:{turn,step:0,usage:{inputTokens:n,outputTokens:0}}}));
 let revision=1;
 const persistence={list:async()=>[{header:{id:'browser-fixture'},revision}],open:async()=>({inheritedEventCount:0,read:async offset=>({events:events.slice(offset,offset+512)}),close:async()=>{}})};
