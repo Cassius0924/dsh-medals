@@ -90,7 +90,7 @@
     if(next){const c=state.snapshot.challenges.progress[next.id];state.next=next.id;$('#hero-next-name').textContent=next.name;$('#hero-next-fill').style.width=`${Math.max(2,Math.min(100,c.percent))}%`;$('#hero-next-text').textContent=progressText(next);$('#hero-next').setAttribute('aria-label',`${t('nextGoal')} · ${next.name} · ${progressText(next)}`);}
   }
   const reducedMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let heroTimer=0,heroToken=0,heroHover=false,heroSwiped=false;
+  let heroTimer=0,heroToken=0,heroHover=false,heroDragged=false,heroTouchedAt=-1e9;
   function renderHeroNav(){
     const list=state.heroList,multi=list.length>1;$('#hero-nav').hidden=!multi;$('#hero-caption').hidden=multi;
     $('#hero-dots').hidden=list.length>12;
@@ -105,7 +105,7 @@
     $('#hero-date').textContent=m.preview?t('previewHero'):latest?t('heroDate',{date:date(latest.earnedOn),count:m.records.length}):progressText(m);
     $('#hero-visual-open').setAttribute('aria-label',t(m.locked?'heroAriaLocked':'heroAriaEarned',{name:m.name}));
     $('#hero-caption span:last-child').textContent=t(m.locked?'unlockHint':'touchHint');
-    $('#hero-fallback').hidden=true;if(!heroStage)heroStage=stage($('#hero-canvas'),m,false,$('#hero-fallback'));else heroStage.setMedal(m);
+    $('#hero-fallback').hidden=true;if(!heroStage)heroStage=stage($('#hero-canvas'),m,true,$('#hero-fallback'));else heroStage.setMedal(m);
   }
   // dir: 1 = forward (slides out left), -1 = back, 0 = no transition.
   function showHero(index,dir=0){
@@ -122,7 +122,7 @@
       void $('#hero').offsetWidth;slides.forEach(el=>el.classList.remove('no-anim','in-left','in-right'));
     },260);
   }
-  const heroPaused=()=>document.hidden||state.view!=='collection'||heroHover||$('#hero').matches(':focus-within')||!!document.querySelector('dialog[open]');
+  const heroPaused=()=>performance.now()-heroTouchedAt<8000||document.hidden||state.view!=='collection'||heroHover||!!$('#hero').querySelector(':focus-visible')||!!document.querySelector('dialog[open]');
   function scheduleHero(){
     clearTimeout(heroTimer);if((state.heroList?.length??0)<2||reducedMotion())return;
     heroTimer=setTimeout(()=>{if(!heroPaused())showHero(state.heroIndex+1,1);scheduleHero();},6000);
@@ -249,14 +249,14 @@
   }
   function reportUnseen(){if(window.parent!==window&&state.snapshot)window.parent.postMessage({type:'dsh-medals:unseen',count:state.snapshot.challenges.unseen.length},location.origin);}
   function closed(stage){stage?.cancel();if(document.querySelector('dialog[open]'))return;document.body.style.overflow='';if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});}
-  $('#hero-open').addEventListener('click',()=>openDetail(state.hero));$('#hero-next').addEventListener('click',()=>openDetail(state.next));$('#hero-visual-open').addEventListener('click',()=>{if(heroSwiped){heroSwiped=false;return;}openDetail(state.hero);});
+  $('#hero-open').addEventListener('click',()=>openDetail(state.hero));$('#hero-next').addEventListener('click',()=>openDetail(state.next));$('#hero-visual-open').addEventListener('click',()=>{if(heroDragged){heroDragged=false;return;}openDetail(state.hero);});
   $('#hero-prev').addEventListener('click',()=>{showHero(state.heroIndex-1,-1);scheduleHero();});$('#hero-forward').addEventListener('click',()=>{showHero(state.heroIndex+1,1);scheduleHero();});
   $('#hero').addEventListener('mouseenter',()=>{heroHover=true;});$('#hero').addEventListener('mouseleave',()=>{heroHover=false;});
-  // Horizontal swipe on the medal moves between slides; a tap still opens the detail.
-  {let start=null;const v=$('#hero-visual-open');v.style.touchAction='pan-y';
-   v.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY};});
-   v.addEventListener('pointerup',e=>{if(!start||(state.heroList?.length??0)<2)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;start=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){heroSwiped=true;showHero(state.heroIndex+(dx<0?1:-1),dx<0?1:-1);scheduleHero();}});
-   v.addEventListener('pointercancel',()=>{start=null;});}
+  // Dragging the featured medal turns it (and holds the carousel); a tap without movement opens the detail.
+  {let start=null;const v=$('#hero-visual-open');
+   v.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY};heroDragged=false;heroTouchedAt=performance.now();});
+   v.addEventListener('pointermove',e=>{if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>8){heroDragged=true;heroTouchedAt=performance.now();}});
+   for(const name of ['pointerup','pointercancel'])v.addEventListener(name,()=>{start=null;heroTouchedAt=performance.now();});}
   $$('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{state.period=b.dataset.period;renderProgress();}));
   $('#debug-toggle').addEventListener('click',()=>setDebug(state.debug===null?'earned':null));
   $$('[data-debug-state]').forEach(button=>button.addEventListener('click',()=>setDebug(button.dataset.debugState)));

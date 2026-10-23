@@ -916,7 +916,7 @@ class MedalStage {
   // Stop an entrance early (drag, orient, fallback) and still let the caller reveal its copy.
   endEntrance() { const e = this.entrance; this.entrance = null; this.pose = { scale: 1, z: 0, lift: 0 }; if (e && !e.landed) { e.landed = true; e.resolve(); } }
 
-  smooth() { return !!this.entrance || !!this.glintStart || (this.autoSpin && !this.paused) || this.inertia !== 0; }
+  smooth() { return !!this.entrance || !!this.glintStart || (this.autoSpin && !this.paused) || this.inertia !== 0 || !!this.settling; }
 
   // Advance entrance, inertia and auto-spin for this frame.
   step(time) {
@@ -927,10 +927,19 @@ class MedalStage {
       if (g >= 1) { this.glintStart = 0; this.glint = 0; this.sweep = 0; }
       else { this.glint = Math.sin(g * Math.PI) ** 2; this.sweep = easeInOut(g); }
     }
-    if (!this.autoSpin || this.dragging || !dt) return;
+    if (this.dragging || !dt) return;
     if (this.inertia) {
       this.y += this.inertia * dt; this.inertia *= Math.exp(-dt / 420);
       if (Math.abs(this.inertia) < SPIN_SPEED * .5) { this.inertia = 0; this.idleSince = time; }
+    }
+    if (!this.autoSpin) {
+      // Stages without auto-spin drift back to their display pose after being turned.
+      if (this.interactive && !this.inertia && time - this.idleSince > RESUME_DELAY + 500) {
+        const restY = -.32 + Math.round((this.y + .32) / TAU) * TAU;
+        this.y = approach(this.y, restY, dt, 600); this.x = approach(this.x, .17, dt, 600);
+        this.settling = Math.abs(this.y - restY) > .002 || Math.abs(this.x - .17) > .002;
+      }
+      return;
     }
     const resting = !this.paused && !this.inertia && time - this.idleSince > RESUME_DELAY;
     this.spin = approach(this.spin, resting ? SPIN_SPEED * this.spinDirection : 0, dt, 700);

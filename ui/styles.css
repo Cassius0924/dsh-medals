@@ -134,3 +134,4 @@ dialog{border:1px solid #3b434a;background:var(--stage);color:var(--stage-text);
 @media(hover:hover){.hero-arrow:hover{color:var(--stage-text);border-color:#ffffff40}.hero-dot:hover::after{background:#ffffff66}}
 @media(max-width:479px){.hero-arrow{width:44px;height:44px}.hero-dot{width:14px;height:44px}}
 @media(prefers-reduced-motion:reduce){.hero-slide{transition:none}}
+.hero-canvas{cursor:grab}.hero-canvas:active{cursor:grabbing}
