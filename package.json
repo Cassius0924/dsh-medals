@@ -1,6 +1,6 @@
 {
   "name": "@cassius0924/dsh-medals",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Personal 3D medals for DeepSeek Harness token-usage achievements",
   "type": "module",
   "main": "lib/index.js",
