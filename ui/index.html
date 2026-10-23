@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="DSH Medals：记录你的探索，永久收藏属于自己的立体奖牌。">
   <title>奖牌馆 · DSH Medals</title>
+  <script src="./theme.js"></script>
   <link rel="stylesheet" href="./styles.css">
   <script src="./medal-renderer.js" defer></script>
   <script src="./i18n.js" defer></script>
@@ -15,11 +16,10 @@
   <a class="skip" href="#main-content" data-i18n="skip">跳至奖牌馆内容</a>
   <div class="app-layout">
     <main id="main-content" class="main">
-      <div class="breadcrumb" aria-label="当前位置" data-i18n-label="breadcrumbLabel"><span data-i18n="space">个人空间</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span data-i18n="nav">奖牌馆</span></div>
       <header class="page-heading">
         <div><h1 id="gallery-title" tabindex="-1" data-i18n="nav">奖牌馆</h1><p class="page-subtitle" id="collection-summary" data-i18n="loadingCollection">正在读取收藏…</p></div>
-        <div class="heading-actions"><button class="outline-button" id="debug-toggle" type="button" aria-pressed="false" aria-controls="debug-toolbar" disabled data-i18n="debugOpen">Debug 预览</button><button class="outline-button" id="reveal-trigger" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5zM20 3v4m-2-2h4"/></svg><span id="reveal-trigger-label" data-i18n="revealNew">揭晓新奖牌</span></button></div>
-      </header>
+        <button class="hero-new" id="reveal-trigger" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg><span id="reveal-trigger-label" data-i18n="revealNew">揭晓新奖牌</span><span data-icon="arrow"></span></button>
+              </header>
       <section id="debug-toolbar" class="debug-toolbar" aria-label="奖牌样式预览" data-i18n-label="debugLabel" hidden><div><strong data-i18n="debugTitle">Debug 样式预览</strong><p data-i18n="debugHelp">仅切换奖牌外观，不修改真实进度与收藏记录。</p></div><div class="debug-states" role="group" aria-label="预览获得状态" data-i18n-label="previewState"><button type="button" data-debug-state="earned" aria-pressed="false" data-i18n="allEarned">全部已获得</button><button type="button" data-debug-state="locked" aria-pressed="false" data-i18n="allLocked">全部未获得</button></div></section>
       <nav class="content-tabs" role="tablist" aria-label="奖牌馆视图" data-i18n-label="views">
         <button class="tab active" id="collection-tab" type="button" data-view="collection" role="tab" aria-selected="true" aria-controls="collection-view"><span data-i18n="collection">收藏馆</span><span class="tab-count" id="tab-count">0</span></button>
@@ -28,26 +28,28 @@
       <div id="sync-status" role="status" aria-live="polite" data-i18n="syncing">正在同步本地会话与收藏记录…</div>
       <button class="outline-button" id="sync-retry" type="button" hidden data-i18n="retry">重新同步</button>
       <section id="collection-view" hidden role="tabpanel" aria-labelledby="collection-tab">
-        <section class="hero" aria-label="最近获得的奖牌" data-i18n-label="recent">
+        <section class="hero" id="hero" aria-roledescription="carousel" aria-label="我的珍藏" data-i18n-label="recent">
           <div class="hero-copy">
-            <h2 id="hero-name" data-i18n="heroPlaceholder">恒星轨道</h2>
-            <p class="hero-description" id="hero-description" data-i18n="heroCopy">让每一次探索，都留下自己的光。</p>
-            <div class="hero-date" id="hero-date" data-i18n="waiting">等待真实收藏记录</div>
+            <div class="hero-text hero-slide" id="hero-text" aria-live="off">
+              <span class="hero-kicker" id="hero-kicker" data-i18n="heroRecent">最近获得</span>
+              <h2 id="hero-name" data-i18n="heroPlaceholder">恒星轨道</h2>
+              <p class="hero-description" id="hero-description" data-i18n="heroCopy">让每一次探索，都留下自己的光。</p>
+              <div class="hero-date" id="hero-date" data-i18n="waiting">等待真实收藏记录</div>
+            </div>
             <button class="hero-cta" id="hero-open" type="button"><span data-i18n="inspect">细看这枚奖牌</span><span data-icon="arrow"></span></button>
+            <button class="hero-next" id="hero-next" type="button" hidden><span class="hero-next-head"><span data-i18n="nextGoal">下一个目标</span><strong id="hero-next-name"></strong></span><span class="hero-next-track" aria-hidden="true"><span id="hero-next-fill"></span></span><span class="hero-next-text" id="hero-next-text"></span></button>
           </div>
           <div class="hero-visual">
-            <button class="hero-medal" id="hero-visual-open" type="button" aria-label="打开最近获得奖牌，拖动查看实体正反面" data-i18n-label="openRecent"><canvas class="hero-canvas" id="hero-canvas" aria-hidden="true"></canvas></button>
-            <div class="stage-caption"><span data-icon="spin"></span><span data-i18n="touchHint">轻触奖牌，探索每一面</span></div>
+            <button class="hero-medal" id="hero-visual-open" type="button" aria-label="打开最近获得奖牌，拖动查看实体正反面" data-i18n-label="openRecent"><canvas class="hero-canvas hero-slide" id="hero-canvas" aria-hidden="true"></canvas></button>
+            <div class="stage-caption" id="hero-caption"><span data-icon="spin"></span><span data-i18n="touchHint">拖动旋转，轻点查看详情</span></div>
+            <div class="hero-nav" id="hero-nav" hidden><button class="hero-arrow" id="hero-prev" type="button" aria-label="上一枚" data-i18n-label="prevMedal"><span data-icon="arrow"></span></button><div class="hero-dots" id="hero-dots" role="group" aria-label="选择奖牌" data-i18n-label="pickMedal"></div><button class="hero-arrow" id="hero-forward" type="button" aria-label="下一枚" data-i18n-label="nextMedal"><span data-icon="arrow"></span></button></div>
             <p class="fallback-notice" id="hero-fallback" hidden data-i18n="static">当前为静态预览</p>
           </div>
-          <span class="hero-index" aria-hidden="true">THE PERSONAL COLLECTION</span>
         </section>
         <div class="collection-top">
           <div class="section-heading"><h2 data-i18n="myCollection">我的收藏</h2><span class="collection-count"><strong id="unlocked-count">0</strong> / <span id="total-count">22</span> <span data-i18n="unlockedSuffix">枚已解锁</span></span></div>
-          <div class="filters" role="group" aria-label="按挑战系列筛选" data-i18n-label="filters"><button class="filter active" type="button" data-filter="all" aria-pressed="true" data-i18n="all">全部</button><button class="filter" type="button" data-filter="daily" aria-pressed="false" data-i18n="dailyFilter">每日</button><button class="filter" type="button" data-filter="weekly" aria-pressed="false" data-i18n="weeklyFilter">每周</button><button class="filter" type="button" data-filter="monthly" aria-pressed="false" data-i18n="monthlyFilter">每月</button><button class="filter" type="button" data-filter="days" aria-pressed="false" data-i18n="daysFilter">达标日</button><button class="filter" type="button" data-filter="tokens" aria-pressed="false" data-i18n="tokensFilter">里程</button><button class="filter" type="button" data-filter="volume" aria-pressed="false" data-i18n="volumeFilter">用量</button><button class="filter" type="button" data-filter="growth" aria-pressed="false" data-i18n="growthFilter">增长</button></div>
         </div>
-        <div class="collection-grid od-grid" id="collection-grid" aria-label="奖牌收藏陈列" data-i18n-label="display"></div>
-        <div class="collection-note"><span data-icon="info"></span><span data-i18n="collectionNote">日常以数字记录达标，里程与突破收藏不同造型。每日同款计次数，周月保留日期版；未解锁时展示外形与主体特征线。</span></div>
+        <div class="collection-grid" id="collection-grid" aria-label="奖牌收藏陈列" data-i18n-label="display"></div>
       </section>
       <section id="progress-view" role="tabpanel" aria-labelledby="progress-tab" hidden>
         <div class="progress-top"><div class="od-field"><h2 id="progress-title" tabindex="-1" data-i18n="todayTitle">今日挑战</h2><span class="period-dates" id="period-dates"></span></div><div class="segment" role="group" aria-label="挑战周期" data-i18n-label="periods"><button type="button" data-period="day" class="active" aria-pressed="true" data-i18n="day">今日</button><button type="button" data-period="week" class="" aria-pressed="false" data-i18n="week">本周</button><button type="button" data-period="month" class="" aria-pressed="false" data-i18n="month">本月</button><button type="button" data-period="lifetime" class="" aria-pressed="false" data-i18n="lifetime">生涯</button></div></div>
@@ -63,36 +65,46 @@
         </details>
         <div class="collection-note"><span data-icon="info"></span><span data-i18n="settlementNote">用量和非完美达标日挑战达到即获得；完美周期与增长在周期结束后结算。</span></div>
       </section>
-      <footer class="page-footer"><span>DSH MEDALS <span aria-hidden="true"> / </span> <span data-i18n="forever">每一枚，永久珍藏</span></span><span class="footer-status"><span class="status-dot" aria-hidden="true"></span><span data-i18n="syncShort">正在同步</span></span></footer>
+      <footer class="page-footer"><span class="footer-status"><span class="status-dot" aria-hidden="true"></span><span data-i18n="syncShort">正在同步</span></span><button class="footer-link" id="debug-toggle" type="button" aria-pressed="false" aria-controls="debug-toolbar" disabled data-i18n="debugOpen">Debug 预览</button></footer>
     </main>
   </div>
-  <dialog id="detail-dialog" aria-labelledby="detail-title" aria-describedby="detail-description">
-    <header class="detail-top"><span class="detail-top-label" data-i18n="detailLabel">个人收藏 / MEDAL DETAILS</span><button class="icon-button" id="detail-close" type="button" aria-label="关闭奖牌详情" data-i18n-label="closeDetail"><span data-icon="close"></span></button></header>
+  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-title" aria-describedby="detail-description">
+    <button class="icon-button detail-close" id="detail-close" type="button" aria-label="关闭奖牌详情" data-i18n-label="closeDetail"><span data-icon="close"></span></button>
     <div class="detail-body">
       <div class="detail-stage">
         <canvas class="detail-canvas" id="detail-canvas" tabindex="0" role="img" aria-label="立体奖牌，可用鼠标或横向触摸拖动旋转；键盘方向键旋转，Home 重置" data-i18n-label="canvas" aria-describedby="rotation-instructions"></canvas>
-        <p class="rotate-hint" id="rotation-instructions" data-i18n="rotateHint">横向拖动，探索正反面 · 方向键也可旋转</p>
-        <div class="rotate-controls" role="group" aria-label="奖牌朝向" data-i18n-label="orientation"><button type="button" data-orient="front" aria-pressed="false" data-i18n="front">正面</button><button type="button" data-orient="back" aria-pressed="false" data-i18n="back">背面</button><button type="button" data-orient="reset" class="active" aria-pressed="true"><span data-icon="reset"></span><span data-i18n="reset">重置</span></button></div>
         <p class="fallback-notice" id="detail-fallback" hidden data-i18n="staticSides">当前为静态预览 · 可切换正反面</p>
+        <div class="detail-toolbar">
+          <div class="rotate-controls" role="group" aria-label="奖牌朝向" data-i18n-label="orientation"><button type="button" data-orient="reset" class="active" aria-pressed="true"><span data-icon="spin"></span><span data-i18n="reset">旋转</span></button><button type="button" data-orient="front" aria-pressed="false" data-i18n="front">正面</button><button type="button" data-orient="back" aria-pressed="false" data-i18n="back">背面</button></div>
+          <button type="button" id="detail-replay" class="replay-button"><span data-icon="replay"></span><span data-i18n="replay">重播获得动画</span></button>
+        </div>
+        <p class="rotate-hint" id="rotation-instructions" data-i18n="rotateHint">拖动可旋转 · 方向键也可以</p>
       </div>
       <section class="detail-copy">
+        <p class="detail-kicker" id="detail-kicker"></p>
         <h2 id="detail-title" data-i18n="heroPlaceholder">恒星轨道</h2>
-        <div class="detail-status" id="detail-status"></div><p class="detail-description" id="detail-description"></p>
-        <div class="unlock-requirement od-field" id="detail-requirement"></div>
-        <h3 class="detail-subheading" id="records-heading" data-i18n="records">获得记录</h3><div id="detail-records"></div>
-        <button type="button" class="detail-link" id="detail-progress" data-i18n="viewProgress">查看挑战进度</button>
-        <p class="detail-footnote"><span data-i18n="detailFootnote">永久收藏，不随原日志删除。</span><br><span data-i18n="detailFootnote2">静态预览图仅展示工艺，实际授奖日期与编号以记录为准。</span></p>
+        <p class="detail-description" id="detail-description"></p>
+        <div class="detail-facts" id="detail-requirement"></div>
+        <button type="button" class="detail-link" id="detail-progress"><span data-i18n="viewProgress">查看挑战进度</span><span data-icon="arrow"></span></button>
+        <div class="detail-records-block" id="detail-records-block">
+          <h3 class="detail-subheading" id="records-heading" data-i18n="records">获得记录</h3>
+          <div class="detail-records" id="detail-records"></div>
+        </div>
       </section>
     </div>
   </dialog>
-  <dialog id="reveal-dialog" class="reveal-dialog" aria-labelledby="reveal-title" aria-describedby="reveal-description">
-    <header class="reveal-header"><span>NEW IN YOUR COLLECTION</span><button class="icon-button" id="reveal-close" type="button" aria-label="关闭揭晓并保留奖牌" data-i18n-label="closeReveal"><span data-icon="close"></span></button></header>
-    <div class="reveal-content">
+  <dialog id="reveal-dialog" class="reveal-dialog" tabindex="-1" aria-labelledby="reveal-title" aria-describedby="reveal-description">
+    <header class="reveal-header"><span id="reveal-kicker" data-i18n="revealKicker">新奖牌</span><div class="reveal-tools"><button class="icon-button" id="reveal-replay" type="button" aria-label="重播获得动画" title="重播获得动画" data-i18n-label="replay"><span data-icon="replay"></span></button><button class="icon-button" id="reveal-close" type="button" aria-label="关闭揭晓并保留奖牌" data-i18n-label="closeReveal"><span data-icon="close"></span></button></div></header>
+    <div class="reveal-stage">
+      <div class="reveal-glow" aria-hidden="true"></div>
+      <canvas class="reveal-dust" id="reveal-dust" aria-hidden="true"></canvas>
       <canvas class="reveal-canvas" id="reveal-canvas" role="img" aria-label="新获得的个人奖牌" data-i18n-label="newMedal"></canvas>
+    </div>
+    <div class="reveal-content">
       <p class="fallback-notice" id="reveal-fallback" hidden data-i18n="static">当前为静态预览</p>
       <h2 id="reveal-title" data-i18n="dawnPlaceholder">破晓之势</h2><p id="reveal-description"></p>
-      <div class="reveal-actions"><button type="button" id="reveal-view" data-i18n="inspectShort">细看奖牌</button><button type="button" id="reveal-later" data-i18n="keep">收入收藏</button></div>
-      <div class="reveal-note" data-i18n="revealNote">已自动加入个人收藏，关闭也不会丢失。</div>
+      <div class="reveal-actions"><button type="button" id="reveal-view" data-i18n="inspectShort">细看奖牌</button><button type="button" id="reveal-next" class="reveal-primary" hidden><span data-i18n="nextMedal">下一枚</span><span data-icon="arrow"></span></button><button type="button" id="reveal-later" class="reveal-primary" data-i18n="keep">收入收藏</button></div>
+      <div class="reveal-note" id="reveal-note" data-i18n="revealNote">已自动加入个人收藏，关闭也不会丢失。</div>
     </div>
   </dialog>
   <button id="return-session" class="return-session" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m5-5-5 5 5 5"/></svg><span data-i18n="return">返回原会话</span></button>
