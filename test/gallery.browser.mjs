@@ -25,7 +25,13 @@ try {
  assert.equal(await page.locator('#collection-grid .medal-card').count(),22,'new challenge collection contains all 22 tiers');
  assert.match(await page.locator('#collection-grid [data-medal="volume-week"]').textContent(),/恒星轨道/);
  assert.match(await page.locator('#collection-grid [data-medal="tokens-500M"]').textContent(),/无尽远行/);
- assert.equal(await page.locator('#hero-name').textContent(),'月面漫游');
+ assert.match(await page.locator('#hero-kicker').textContent(),/^我的珍藏 · 1 \/ \d+$/,'featured stage cycles through earned medals');
+ const firstHero=await page.locator('#hero-name').textContent();
+ await page.locator('#hero-forward').click();
+ assert.notEqual(await page.locator('#hero-name').textContent(),firstHero);
+ assert.match(await page.locator('#hero-kicker').textContent(),/^我的珍藏 · 2 \//);
+ await page.locator('#hero-prev').click();
+ assert.equal(await page.locator('#hero-name').textContent(),firstHero);
  assert.equal(await page.locator('#reveal-trigger').isVisible(),false);
  assert.equal(await page.evaluate(()=>MedalStage.diagnostics.webgl),true);
  await page.locator('[data-medal="daily-1"]').first().click();

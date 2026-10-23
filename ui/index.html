@@ -28,18 +28,21 @@
       <div id="sync-status" role="status" aria-live="polite" data-i18n="syncing">正在同步本地会话与收藏记录…</div>
       <button class="outline-button" id="sync-retry" type="button" hidden data-i18n="retry">重新同步</button>
       <section id="collection-view" hidden role="tabpanel" aria-labelledby="collection-tab">
-        <section class="hero" aria-label="最近获得的奖牌" data-i18n-label="recent">
+        <section class="hero" id="hero" aria-roledescription="carousel" aria-label="我的珍藏" data-i18n-label="recent">
           <div class="hero-copy">
-            <span class="hero-kicker" id="hero-kicker" data-i18n="heroRecent">最近获得</span>
-            <h2 id="hero-name" data-i18n="heroPlaceholder">恒星轨道</h2>
-            <p class="hero-description" id="hero-description" data-i18n="heroCopy">让每一次探索，都留下自己的光。</p>
-            <div class="hero-date" id="hero-date" data-i18n="waiting">等待真实收藏记录</div>
+            <div class="hero-text hero-slide" id="hero-text" aria-live="off">
+              <span class="hero-kicker" id="hero-kicker" data-i18n="heroRecent">最近获得</span>
+              <h2 id="hero-name" data-i18n="heroPlaceholder">恒星轨道</h2>
+              <p class="hero-description" id="hero-description" data-i18n="heroCopy">让每一次探索，都留下自己的光。</p>
+              <div class="hero-date" id="hero-date" data-i18n="waiting">等待真实收藏记录</div>
+            </div>
             <button class="hero-cta" id="hero-open" type="button"><span data-i18n="inspect">细看这枚奖牌</span><span data-icon="arrow"></span></button>
             <button class="hero-next" id="hero-next" type="button" hidden><span class="hero-next-head"><span data-i18n="nextGoal">下一个目标</span><strong id="hero-next-name"></strong></span><span class="hero-next-track" aria-hidden="true"><span id="hero-next-fill"></span></span><span class="hero-next-text" id="hero-next-text"></span></button>
           </div>
           <div class="hero-visual">
-            <button class="hero-medal" id="hero-visual-open" type="button" aria-label="打开最近获得奖牌，拖动查看实体正反面" data-i18n-label="openRecent"><canvas class="hero-canvas" id="hero-canvas" aria-hidden="true"></canvas></button>
-            <div class="stage-caption"><span data-icon="spin"></span><span data-i18n="touchHint">轻触奖牌，探索每一面</span></div>
+            <button class="hero-medal" id="hero-visual-open" type="button" aria-label="打开最近获得奖牌，拖动查看实体正反面" data-i18n-label="openRecent"><canvas class="hero-canvas hero-slide" id="hero-canvas" aria-hidden="true"></canvas></button>
+            <div class="stage-caption" id="hero-caption"><span data-icon="spin"></span><span data-i18n="touchHint">轻触奖牌，探索每一面</span></div>
+            <div class="hero-nav" id="hero-nav" hidden><button class="hero-arrow" id="hero-prev" type="button" aria-label="上一枚" data-i18n-label="prevMedal"><span data-icon="arrow"></span></button><div class="hero-dots" id="hero-dots" role="group" aria-label="选择奖牌" data-i18n-label="pickMedal"></div><button class="hero-arrow" id="hero-forward" type="button" aria-label="下一枚" data-i18n-label="nextMedal"><span data-icon="arrow"></span></button></div>
             <p class="fallback-notice" id="hero-fallback" hidden data-i18n="static">当前为静态预览</p>
           </div>
         </section>

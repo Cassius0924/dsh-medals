@@ -83,16 +83,49 @@
     $('#collection-summary').textContent=state.debug?t('debugSummary',{state:t(state.debug==='earned'?'allEarned':'allLocked')}):t('collectionSummary',{count:i18n.number(unlocked),awards:i18n.number(awards().length),tokens:fmt(state.snapshot.total)});
     $('#reveal-trigger').hidden=!pending;$('#reveal-trigger-label').textContent=t('revealPending',{count:i18n.number(pending)});
     const earned=fresh.filter(m=>!m.locked).sort((a,b)=>b.records[0].earnedOn.localeCompare(a.records[0].earnedOn)||b.records[0].serial.localeCompare(a.records[0].serial));
-    const hero=earned.find(m=>m.design!=='numeric')||earned[0]||fresh[0],latest=hero.records[0];state.hero=hero.id;
-    $('#hero-kicker').textContent=t(hero.preview?'heroPreview':hero.locked?'heroFirst':'heroRecent');
-    $('#hero-name').textContent=hero.name;
-    $('#hero-description').textContent=hero.locked?requirement(hero):hero.inscription;
-    $('#hero-date').textContent=hero.preview?t('previewHero'):latest?t('heroDate',{date:date(latest.earnedOn),count:hero.records.length}):progressText(hero);
-    $('#hero-visual-open').setAttribute('aria-label',t(hero.locked?'heroAriaLocked':'heroAriaEarned',{name:hero.name}));
-    $('.stage-caption span:last-child').textContent=t(hero.locked?'unlockHint':'touchHint');
-    const next=nearest(1)[0];$('#hero-next').hidden=!next||next.id===hero.id;
+    // The featured stage cycles through every earned medal, newest first.
+    const list=earned.length?earned:[fresh[0]],keep=list.findIndex(m=>m.id===state.hero);
+    state.heroList=list.map(m=>m.id);renderHeroNav();showHero(keep>=0?keep:0);scheduleHero();
+    const next=nearest(1)[0];$('#hero-next').hidden=!next;
     if(next){const c=state.snapshot.challenges.progress[next.id];state.next=next.id;$('#hero-next-name').textContent=next.name;$('#hero-next-fill').style.width=`${Math.max(2,Math.min(100,c.percent))}%`;$('#hero-next-text').textContent=progressText(next);$('#hero-next').setAttribute('aria-label',`${t('nextGoal')} · ${next.name} · ${progressText(next)}`);}
-    $('#hero-fallback').hidden=true;if(!heroStage)heroStage=stage($('#hero-canvas'),hero,false,$('#hero-fallback'));else heroStage.setMedal(hero);
+  }
+  const reducedMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let heroTimer=0,heroToken=0,heroHover=false,heroSwiped=false;
+  function renderHeroNav(){
+    const list=state.heroList,multi=list.length>1;$('#hero-nav').hidden=!multi;$('#hero-caption').hidden=multi;
+    $('#hero-dots').hidden=list.length>12;
+    $('#hero-dots').innerHTML=multi&&list.length<=12?list.map((id,i)=>`<button type="button" class="hero-dot" data-hero="${i}" aria-label="${esc(t('showMedal',{name:state.medals.find(m=>m.id===id).name}))}"></button>`).join(''):'';
+    $$('[data-hero]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.hero;if(i!==state.heroIndex)showHero(i,i>state.heroIndex?1:-1);scheduleHero();}));
+  }
+  function fillHero(m){
+    const list=state.heroList,latest=m.records[0];
+    $('#hero-kicker').textContent=m.preview?t('heroPreview'):m.locked?t('heroFirst'):list.length>1?t('heroSlide',{index:i18n.number(state.heroIndex+1),count:i18n.number(list.length)}):t('heroRecent');
+    $('#hero-name').textContent=m.name;
+    $('#hero-description').textContent=m.locked?requirement(m):m.inscription;
+    $('#hero-date').textContent=m.preview?t('previewHero'):latest?t('heroDate',{date:date(latest.earnedOn),count:m.records.length}):progressText(m);
+    $('#hero-visual-open').setAttribute('aria-label',t(m.locked?'heroAriaLocked':'heroAriaEarned',{name:m.name}));
+    $('#hero-caption span:last-child').textContent=t(m.locked?'unlockHint':'touchHint');
+    $('#hero-fallback').hidden=true;if(!heroStage)heroStage=stage($('#hero-canvas'),m,false,$('#hero-fallback'));else heroStage.setMedal(m);
+  }
+  // dir: 1 = forward (slides out left), -1 = back, 0 = no transition.
+  function showHero(index,dir=0){
+    const list=state.heroList;index=(index+list.length)%list.length;state.heroIndex=index;
+    const m=state.medals.find(x=>x.id===list[index]);state.hero=m.id;
+    $$('[data-hero]').forEach(b=>b.setAttribute('aria-current',String(+b.dataset.hero===index)));
+    const slides=$$('.hero-slide'),token=++heroToken;
+    slides.forEach(el=>el.classList.remove('out-left','out-right','in-left','in-right'));
+    if(!dir||reducedMotion()||!heroStage)return fillHero(m);
+    slides.forEach(el=>el.classList.add(dir>0?'out-left':'out-right'));
+    setTimeout(()=>{
+      if(token!==heroToken)return;fillHero(m);
+      slides.forEach(el=>{el.classList.remove('out-left','out-right');el.classList.add('no-anim',dir>0?'in-right':'in-left');});
+      void $('#hero').offsetWidth;slides.forEach(el=>el.classList.remove('no-anim','in-left','in-right'));
+    },260);
+  }
+  const heroPaused=()=>document.hidden||state.view!=='collection'||heroHover||$('#hero').matches(':focus-within')||!!document.querySelector('dialog[open]');
+  function scheduleHero(){
+    clearTimeout(heroTimer);if((state.heroList?.length??0)<2||reducedMotion())return;
+    heroTimer=setTimeout(()=>{if(!heroPaused())showHero(state.heroIndex+1,1);scheduleHero();},6000);
   }
   function setView(view){if(!state.snapshot)return;state.view=view;$('#collection-view').hidden=view!=='collection';$('#progress-view').hidden=view!=='progress';$$('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);b.setAttribute('aria-selected',String(b.dataset.view===view));b.tabIndex=b.dataset.view===view?0:-1;});if(view==='progress')renderProgress();else{heroStage.draw();stages.forEach(s=>s.draw());}}
   function renderProgress(){
@@ -216,7 +249,14 @@
   }
   function reportUnseen(){if(window.parent!==window&&state.snapshot)window.parent.postMessage({type:'dsh-medals:unseen',count:state.snapshot.challenges.unseen.length},location.origin);}
   function closed(stage){stage?.cancel();if(document.querySelector('dialog[open]'))return;document.body.style.overflow='';if(lastFocus?.isConnected)lastFocus.focus({preventScroll:true});}
-  $('#hero-open').addEventListener('click',()=>openDetail(state.hero));$('#hero-next').addEventListener('click',()=>openDetail(state.next));$('#hero-visual-open').addEventListener('click',()=>openDetail(state.hero));
+  $('#hero-open').addEventListener('click',()=>openDetail(state.hero));$('#hero-next').addEventListener('click',()=>openDetail(state.next));$('#hero-visual-open').addEventListener('click',()=>{if(heroSwiped){heroSwiped=false;return;}openDetail(state.hero);});
+  $('#hero-prev').addEventListener('click',()=>{showHero(state.heroIndex-1,-1);scheduleHero();});$('#hero-forward').addEventListener('click',()=>{showHero(state.heroIndex+1,1);scheduleHero();});
+  $('#hero').addEventListener('mouseenter',()=>{heroHover=true;});$('#hero').addEventListener('mouseleave',()=>{heroHover=false;});
+  // Horizontal swipe on the medal moves between slides; a tap still opens the detail.
+  {let start=null;const v=$('#hero-visual-open');v.style.touchAction='pan-y';
+   v.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY};});
+   v.addEventListener('pointerup',e=>{if(!start||(state.heroList?.length??0)<2)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;start=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){heroSwiped=true;showHero(state.heroIndex+(dx<0?1:-1),dx<0?1:-1);scheduleHero();}});
+   v.addEventListener('pointercancel',()=>{start=null;});}
   $$('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-period]').forEach(b=>b.addEventListener('click',()=>{state.period=b.dataset.period;renderProgress();}));
   $('#debug-toggle').addEventListener('click',()=>setDebug(state.debug===null?'earned':null));
   $$('[data-debug-state]').forEach(button=>button.addEventListener('click',()=>setDebug(button.dataset.debugState)));
