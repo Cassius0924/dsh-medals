@@ -14,7 +14,7 @@ assert(cookies.length>0);
 const cookieHeader=cookies.map(c=>`${c.name}=${c.value}`).join('; ');
 const response=await fetch(origin+'/api/dsh-medals/status',{headers:{cookie:cookieHeader},signal:AbortSignal.timeout(120000)});
 assert.equal(response.status,200);
-const status=await response.json();assert.equal(status.complete,true);assert(status.total>0);assert(status.challenges.awards.length>0);assert.equal(status.challenges.rules.length,22);
+const status=await response.json();assert.equal(status.complete,true);assert(status.total>0);assert(status.challenges.awards.length>0);assert.equal(status.challenges.rules.length,25);
 const anonymous=await fetch(origin+'/api/dsh-medals/status',{signal:AbortSignal.timeout(10000)});assert.equal(anonymous.status,401);
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
 const errors=[],baselineErrors=[],scriptFailures=[];
