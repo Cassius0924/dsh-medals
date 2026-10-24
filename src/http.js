@@ -1,7 +1,7 @@
 import {readFile} from 'node:fs/promises';
 
 const PREFIX='/api/dsh-medals';
-const STATIC=/^(?:index\.html|styles\.css|app\.js|i18n\.js|theme\.js|medal-renderer\.js|assets\/medals\/(?:orbit|lunar|rise|dawn|first|beyond|evergreen|compass|rosette|prism|constellation|galaxy|daily-[124]|week-days-[357]|days-(?:7|30)|month-days-(?:10|20))-(?:front|back)\.png)$/;
+const STATIC=/^(?:index\.html|styles\.css|app\.js|i18n\.js|theme\.js|medal-renderer\.js|assets\/medals\/(?:orbit|lunar|rise|dawn|first|beyond|evergreen|compass|rosette|starfire|starchart|starriver|daily-[124]|week-days-[357]|days-(?:7|30)|month-days-(?:10|20))-(?:front|back)\.png)$/;
 const mime={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',png:'image/png'};
 function trusted(req) {
   try {

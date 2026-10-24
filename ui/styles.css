@@ -135,3 +135,18 @@ dialog{border:1px solid #3b434a;background:var(--stage);color:var(--stage-text);
 @media(max-width:479px){.hero-arrow{width:44px;height:44px}.hero-dot{width:14px;height:44px}}
 @media(prefers-reduced-motion:reduce){.hero-slide{transition:none}}
 .hero-canvas{cursor:grab}.hero-canvas:active{cursor:grabbing}
+#gallery-title{user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.debug-exit{min-height:36px;padding:4px 12px;border-radius:6px;border:1px solid var(--line);background:var(--bg);font-size:12px;color:var(--ink)}
+/* Share image dialog */
+.share-dialog{width:min(440px,calc(100vw - 32px));padding:0 0 20px;text-align:center}
+.share-header{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 4px 24px}.share-header h2{margin:0;font-size:15px;font-weight:600}
+.share-preview{position:relative;margin:8px 24px 0;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:#0b0f13;border:1px solid #2a3239}
+.share-preview img{display:block;width:100%;height:100%;object-fit:cover}
+.share-loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;font-size:13px;color:var(--stage-muted)}
+.share-actions{display:flex;gap:12px;justify-content:center;margin:20px 24px 0}
+.share-actions button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:8px;border:1px solid #66717a;background:transparent;color:var(--stage-text);font-size:14px}
+.share-actions button svg{width:16px;height:16px}.share-actions .share-primary{background:var(--gold);border-color:var(--gold);color:#2b2414;font-weight:600}
+.share-actions button:disabled{opacity:.45;cursor:default}
+.share-note{min-height:20px;margin:12px 24px 0;font-size:12px;color:var(--stage-muted)}
+@media(hover:hover){.share-actions button:not(:disabled):hover{border-color:var(--stage-text)}.share-actions .share-primary:not(:disabled):hover{background:#efd9a6}}
+@media(max-width:479px){.share-dialog{width:calc(100vw - 24px)}.share-preview{margin:8px 16px 0}.share-actions{margin:16px 16px 0}}

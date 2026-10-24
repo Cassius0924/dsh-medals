@@ -45,7 +45,7 @@ function GalleryPanel({t,useMedalNavigation,useSessions,onReturn}){
   },[available,onReturn,language]);
   // Each time the panel is opened, let the gallery play any new medals.
   useEffect(()=>{frame.current?.contentWindow?.postMessage({type:'dsh-medals:opened'},location.origin);},[openCount]);
-  return h('section',{className:'dsh-medals-panel','aria-label':t('nav')},h('iframe',{ref:frame,title:t('nav'),src:'/api/dsh-medals/ui/?lang='+encodeURIComponent(initialLanguage.current),className:'dsh-medals-panel-frame',onLoad:sendContext}));
+  return h('section',{className:'dsh-medals-panel','aria-label':t('nav')},h('iframe',{ref:frame,title:t('nav'),allow:'clipboard-write',src:'/api/dsh-medals/ui/?lang='+encodeURIComponent(initialLanguage.current),className:'dsh-medals-panel-frame',onLoad:sendContext}));
 }
 
 function SidebarEntry({wide=true,t,usePanelInfo,onOpen}){

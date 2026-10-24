@@ -33,6 +33,10 @@ DSH Medals 是 DeepSeek Harness Web 的个人奖牌插件。它读取本机 DSH 
 
 已获得的奖牌在详情中自动缓慢旋转，可以拖动、轻甩，也可以用方向键旋转，或切换到正面、背面。右侧列出挑战条件、首次获得日期和全部获得记录；点击某条记录，会切换到那一次的奖牌版本，序号和日期随之更新。未获得的奖牌显示挑战条件和当前进度。
 
+已获得的奖牌可以点击「分享」生成一张 4:5 竖版分享图，内容包括奖牌、名称、挑战条件、当前选中记录的获得日期、序号和获得次数，以及截至当天的累计用量。生成后可以直接复制图片，或下载为 PNG 文件。
+
+<img src="docs/screenshots/share.webp" alt="分享图" width="360">
+
 ![奖牌详情](docs/screenshots/detail.webp)
 
 ### 挑战进度
@@ -73,7 +77,7 @@ DSH Medals 是 DeepSeek Harness Web 的个人奖牌插件。它读取本机 DSH 
 - 每周从周一开始，日期按首次安装时的服务端时区计算，这个时区之后不会再变。
 - 已获得的奖牌永久保留，即使对应的会话日志被删除也不会撤销。
 
-更细的规则和奖牌造型说明见 [docs/challenges.md](docs/challenges.md)，动画与交互的设计决定见 [docs/reveal-animation.md](docs/reveal-animation.md)。
+更细的规则和奖牌造型说明见 [docs/challenges.md](docs/challenges.md)，动画与交互的设计决定见 [docs/reveal-animation.md](docs/reveal-animation.md)，术语见 [docs/glossary.md](docs/glossary.md)，各项设计决定记录在 [docs/adr/](docs/adr/)。
 
 ## 统计口径
 
@@ -97,7 +101,7 @@ DSH Medals 是 DeepSeek Harness Web 的个人奖牌插件。它读取本机 DSH 
 
 ## Debug 预览
 
-页面右下角的「Debug 预览」用于检查奖牌外观，可以把全部奖牌切换为「已获得」或「未获得」样式。预览只改变显示，不写入任何记录，退出预览或刷新页面后恢复真实状态。
+Debug 预览没有可见入口：连续点击「奖牌馆」标题 5 次即可开启或关闭，相邻两次点击间隔不能超过 2 秒。它用于检查奖牌外观，可以把全部奖牌切换为「已获得」或「未获得」样式。预览只改变显示，不写入任何记录，退出预览或刷新页面后恢复真实状态。
 
 ## 安装与构建
 

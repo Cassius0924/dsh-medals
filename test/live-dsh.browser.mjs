@@ -56,12 +56,12 @@ try{
  await frame.locator('[data-view="progress"]').click();assert.equal(await frame.locator('.task').count(),3);assert.match(await frame.locator('#task-list').textContent(),/5M/);
  await frame.locator('[data-period="week"]').click();assert.equal(await frame.locator('.task').count(),5);
  await frame.locator('[data-period="month"]').click();assert.match(await frame.locator('#task-list').textContent(),/200M/);
- await frame.locator('[data-view="collection"]').click();await frame.locator('#debug-toggle').click();
+ await frame.locator('[data-view="collection"]').click();for(let i=0;i<5;i++)await frame.locator('#gallery-title').click();
  assert.equal(await frame.locator('#collection-grid .medal-locked').count(),0);
  await frame.locator('#collection-grid [data-medal="tokens-10B"]').click();assert.equal(await frame.locator('.rotate-controls').isVisible(),true);
  await page.screenshot({path:new URL('../evidence/live-debug-earned.png',import.meta.url).pathname,fullPage:true});await frame.locator('#detail-close').click();
  await frame.locator('[data-debug-state="locked"]').click();assert.equal(await frame.locator('#collection-grid .medal-locked').count(),22);
- await frame.locator('#debug-toggle').click();assert.equal(await frame.locator('#unlocked-count').textContent(),String(new Set(status.challenges.awards.map(a=>a.ruleId)).size));
+ for(let i=0;i<5;i++)await frame.locator('#gallery-title').click();assert.equal(await frame.locator('#unlocked-count').textContent(),String(new Set(status.challenges.awards.map(a=>a.ruleId)).size));
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:new URL('../evidence/live-dsh-mobile.png',import.meta.url).pathname,fullPage:true});
  assert.equal(await frame.locator('body').evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await frame.locator('#return-session').click();await page.locator('.dsh-medals-panel').waitFor({state:'detached'});

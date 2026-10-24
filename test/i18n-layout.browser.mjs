@@ -56,11 +56,11 @@ try{
     assert.equal(await page.locator('.rotate-controls').isVisible(),false);
     if(language==='en')await noChinese();
     await page.locator('#detail-close').click();
-    await page.locator('#debug-toggle').click();
+    for(let i=0;i<5;i++)await page.locator('#gallery-title').click();
     if(language==='en')await noChinese();
     await page.locator('[data-debug-state="locked"]').click();
     if(language==='en')await noChinese();
-    await page.locator('#debug-toggle').click();
+    for(let i=0;i<5;i++)await page.locator('#gallery-title').click();
   }
   await page.locator('#collection-grid .medal-card').first().evaluate(el=>{window.retainedCard=el;});
   const polled=page.waitForResponse(r=>r.url().endsWith('/status'));

@@ -20,7 +20,7 @@
         <div><h1 id="gallery-title" tabindex="-1" data-i18n="nav">奖牌馆</h1><p class="page-subtitle" id="collection-summary" data-i18n="loadingCollection">正在读取收藏…</p></div>
         <button class="hero-new" id="reveal-trigger" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg><span id="reveal-trigger-label" data-i18n="revealNew">揭晓新奖牌</span><span data-icon="arrow"></span></button>
               </header>
-      <section id="debug-toolbar" class="debug-toolbar" aria-label="奖牌样式预览" data-i18n-label="debugLabel" hidden><div><strong data-i18n="debugTitle">Debug 样式预览</strong><p data-i18n="debugHelp">仅切换奖牌外观，不修改真实进度与收藏记录。</p></div><div class="debug-states" role="group" aria-label="预览获得状态" data-i18n-label="previewState"><button type="button" data-debug-state="earned" aria-pressed="false" data-i18n="allEarned">全部已获得</button><button type="button" data-debug-state="locked" aria-pressed="false" data-i18n="allLocked">全部未获得</button></div></section>
+      <section id="debug-toolbar" class="debug-toolbar" aria-label="奖牌样式预览" data-i18n-label="debugLabel" hidden><div><strong data-i18n="debugTitle">Debug 样式预览</strong><p data-i18n="debugHelp">仅切换奖牌外观，不修改真实进度与收藏记录。</p></div><div class="debug-states" role="group" aria-label="预览获得状态" data-i18n-label="previewState"><button type="button" data-debug-state="earned" aria-pressed="false" data-i18n="allEarned">全部已获得</button><button type="button" data-debug-state="locked" aria-pressed="false" data-i18n="allLocked">全部未获得</button></div><button type="button" class="debug-exit" id="debug-exit" data-i18n="debugExit">退出 Debug</button></section>
       <nav class="content-tabs" role="tablist" aria-label="奖牌馆视图" data-i18n-label="views">
         <button class="tab active" id="collection-tab" type="button" data-view="collection" role="tab" aria-selected="true" aria-controls="collection-view"><span data-i18n="collection">收藏馆</span><span class="tab-count" id="tab-count">0</span></button>
         <button class="tab" id="progress-tab" type="button" data-view="progress" role="tab" aria-selected="false" aria-controls="progress-view" data-i18n="challenges">挑战</button>
@@ -65,7 +65,7 @@
         </details>
         <div class="collection-note"><span data-icon="info"></span><span data-i18n="settlementNote">用量和非完美达标日挑战达到即获得；完美周期与增长在周期结束后结算。</span></div>
       </section>
-      <footer class="page-footer"><span class="footer-status"><span class="status-dot" aria-hidden="true"></span><span data-i18n="syncShort">正在同步</span></span><button class="footer-link" id="debug-toggle" type="button" aria-pressed="false" aria-controls="debug-toolbar" disabled data-i18n="debugOpen">Debug 预览</button></footer>
+      <footer class="page-footer"><span class="footer-status"><span class="status-dot" aria-hidden="true"></span><span data-i18n="syncShort">正在同步</span></span></footer>
     </main>
   </div>
   <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-title" aria-describedby="detail-description">
@@ -76,7 +76,7 @@
         <p class="fallback-notice" id="detail-fallback" hidden data-i18n="staticSides">当前为静态预览 · 可切换正反面</p>
         <div class="detail-toolbar">
           <div class="rotate-controls" role="group" aria-label="奖牌朝向" data-i18n-label="orientation"><button type="button" data-orient="reset" class="active" aria-pressed="true"><span data-icon="spin"></span><span data-i18n="reset">旋转</span></button><button type="button" data-orient="front" aria-pressed="false" data-i18n="front">正面</button><button type="button" data-orient="back" aria-pressed="false" data-i18n="back">背面</button></div>
-          <button type="button" id="detail-replay" class="replay-button"><span data-icon="replay"></span><span data-i18n="replay">重播获得动画</span></button>
+          <button type="button" id="detail-replay" class="replay-button"><span data-icon="replay"></span><span data-i18n="replay">重播获得动画</span></button><button type="button" id="detail-share" class="replay-button"><span data-icon="share"></span><span data-i18n="share">分享</span></button>
         </div>
         <p class="rotate-hint" id="rotation-instructions" data-i18n="rotateHint">拖动可旋转 · 方向键也可以</p>
       </div>
@@ -92,6 +92,12 @@
         </div>
       </section>
     </div>
+  </dialog>
+  <dialog id="share-dialog" class="share-dialog" aria-labelledby="share-title">
+    <header class="share-header"><h2 id="share-title" data-i18n="shareTitle">分享奖牌</h2><button class="icon-button" id="share-close" type="button" aria-label="关闭" data-i18n-label="close"><span data-icon="close"></span></button></header>
+    <div class="share-preview"><img id="share-image" alt=""><p class="share-loading" id="share-loading" data-i18n="generating">正在生成图片…</p></div>
+    <div class="share-actions"><button type="button" id="share-copy"><span data-icon="copy"></span><span data-i18n="copyImage">复制图片</span></button><button type="button" id="share-download" class="share-primary"><span data-icon="download"></span><span data-i18n="downloadImage">下载图片</span></button></div>
+    <p class="share-note" id="share-note" role="status" aria-live="polite"></p>
   </dialog>
   <dialog id="reveal-dialog" class="reveal-dialog" tabindex="-1" aria-labelledby="reveal-title" aria-describedby="reveal-description">
     <header class="reveal-header"><span id="reveal-kicker" data-i18n="revealKicker">新奖牌</span><div class="reveal-tools"><button class="icon-button" id="reveal-replay" type="button" aria-label="重播获得动画" title="重播获得动画" data-i18n-label="replay"><span data-icon="replay"></span></button><button class="icon-button" id="reveal-close" type="button" aria-label="关闭揭晓并保留奖牌" data-i18n-label="closeReveal"><span data-icon="close"></span></button></div></header>

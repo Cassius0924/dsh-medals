@@ -53,7 +53,7 @@ try{
  const details=await page.evaluate(()=>studioStages.filter(s=>!s.medal.locked).map(s=>{let meshes=0,vertices=0;s.model.traverse(o=>{if(o.isMesh){meshes++;vertices+=o.geometry.attributes.position.count;}});return{id:s.medal.id,meshes,vertices};}));
  assert(details.every(d=>d.meshes>10&&d.vertices>1000));
  await page.goto(base+'/api/dsh-medals/ui/?lang=zh');await page.locator('#collection-grid .medal-card').first().waitFor();
- await page.locator('#debug-toggle').click();
+ for(let i=0;i<5;i++)await page.locator('#gallery-title').click();
  await page.locator('#collection-grid').scrollIntoViewIfNeeded();
  if(!review)await page.evaluate(async()=>{for(let y=0;y<document.documentElement.scrollHeight;y+=innerHeight*.7){scrollTo(0,y);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}scrollTo(0,0);});
  await capture(page,'enamel-gallery-desktop');

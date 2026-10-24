@@ -71,7 +71,7 @@ function palette(medal) {
   if (medal.design === 'numeric') { const field = {daily:'#a21649',weekly:'#075b5d',monthly:'#482340',days:'#214e7d'}[medal.series] || '#265b9a'; return {metal:medal.metal==='gold'?'#c6a05b':'#bdc5ce',bright:medal.metal==='gold'?'#f3d18c':'#edf0f5',field,dark:medal.metal==='gold'?'#6c4a23':'#4a5665'}; }
   if (medal.locked) return { metal: '#7a8592', bright: '#c8d2db', field: '#18212c', dark: '#35404b' };
   const design=medal.design||medal.id;
-  const fields={evergreen:'#164b3c',compass:'#14394b',rosette:'#ede7d9',prism:'#183b55',constellation:'#20244b',galaxy:'#101f38'};
+  const fields={evergreen:'#164b3c',compass:'#14394b',rosette:'#ede7d9',starfire:'#0e3a60',starchart:'#2a1d55',starriver:'#06071a'};
   if(fields[design])return {metal:design==='compass'?'#bdcddd':'#deb976',bright:design==='compass'?'#edf4ff':'#ffe8b5',field:fields[design],dark:'#526078'};
   if (design === 'lunar') return { metal: '#c2d0e0', bright: '#f3f5fa', field: '#22425c', dark: '#6c849b' };
   if (design === 'rise') return { metal: '#c8d9e3', bright: '#f3f5ff', field: '#103b35', dark: '#61778b' };
@@ -87,8 +87,12 @@ function materials(medal) {
   const polished = new THREE.MeshPhysicalMaterial({ color: p.bright, metalness: .90, roughness: .19 });
   const recess = new THREE.MeshStandardMaterial({ color: p.dark, metalness: 1, roughness: .37 });
   const enamel = new THREE.MeshPhysicalMaterial({ color: p.field, metalness: .34, roughness: .24, clearcoat: .92, clearcoatRoughness: .12, bumpMap: engineTurnedTexture(), bumpScale: .0014 });
+  // Deep night-sky enamel: low reflectance so the field reads near-black under the studio light.
+  const field=medal.design==='starriver'&&!medal.locked?new THREE.MeshPhysicalMaterial({color:p.field,metalness:0,roughness:.42,specularIntensity:.25,clearcoat:.3,clearcoatRoughness:.22,iridescence:.35,iridescenceIOR:1.3,iridescenceThicknessRange:[380,620],bumpMap:enamel.bumpMap,bumpScale:.0014}):enamel;
+  // Deeper cosmic fields: less specular so the enamel colour carries.
+  const depth={starfire:.55,starchart:.45}[medal.design];if(depth&&!medal.locked)enamel.specularIntensity=depth;
   if(medallion){satin.metalness=.82;polished.metalness=.84;polished.roughness=.22;}
-  return { satin, polished, recess, enamel, palette: p };
+  return { satin, polished, recess, enamel:field, palette: p };
 }
 
 function mesh(group, geometry, material, x = 0, y = 0, z = 0) {
@@ -192,7 +196,7 @@ function engravingTexture(medal, back = false) {
     ctx.font = botanical?'500 160px system-ui':'500 132px system-ui'; ctx.fillText(botanical?'常青之树':medal.name, 1024, 810);
     ctx.font = botanical?'400 64px system-ui':'400 48px system-ui'; ctx.fillText(botanical?'把每一天的坚持，长成枝叶':medal.locked ? '下一段旅程，正在发生' : medal.inscription, 1024, 1010);
     ctx.fillRect(865, 1145, 318, 2);
-    ctx.font = botanical?'400 68px system-ui':'400 52px system-ui'; ctx.fillText(botanical?'恒久生长':medal.locked ? '尚未解锁' : medal.period, 1024, 1250);
+    ctx.font = botanical?'400 68px system-ui':'400 52px system-ui'; ctx.fillText(botanical?'恒久生长':medal.locked ? '尚未解锁' : medal.series==='tokens' ? `${medal.period} ${medal.number} tokens` : medal.period, 1024, 1250);
     ctx.font = botanical?'500 62px monospace':'500 52px monospace'; ctx.fillText(botanical?'ROOTED IN CONSISTENCY':medal.locked ? 'PERSONAL ACHIEVEMENT' : `No. ${medal.serial}`, 1024, 1390);
     ctx.font = '400 28px system-ui'; ctx.fillText('PERSONAL COLLECTION', 1024, 1540);
   } else {
@@ -267,7 +271,7 @@ function shapedCase(group, medal, m, shape) {
   traceShape(group, shape, 1.01, .083, .013, m.polished);
   traceShape(group, shape, .904, .105, .009, m.polished);
   traceShape(group, shape, .87, .09, .004, m.recess);
-  addBack(group, medal, m,medal.design==='prism'?.51:medal.design==='constellation'?.82:medal.design==='evergreen'?.72:.922);
+  addBack(group, medal, m,medal.design==='starchart'?.84:medal.design==='starriver'?.88:medal.design==='evergreen'?.72:.922);
 }
 
 function guilloche(group, m, inner = .72, outer = .855, petals = 8) {
@@ -506,25 +510,111 @@ function rosetteMedal(group,medal,m) {
   }
   addBack(group,medal,m,.78);
 }
-function prism(group,medal,m){
-  shapedCase(group,medal,m,medalOutline(medal));
-  traceShape(group,roundedPolygon(3,.77,Math.PI/2,.035),1,.14,.018,m.polished);
-  const gem=mesh(group,new THREE.OctahedronGeometry(.43,0),m.polished,0,-.03,.25);gem.rotation.set(.25,.50,.15);
-  for(let i=0;i<3;i++){const a=Math.PI/2+i*TAU/3;bead(group,.048,.81*Math.cos(a),.81*Math.sin(a),.15,m.polished);}
+// Deterministic scatter so a medal looks identical on every render.
+function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function circleShape(radius){const shape=new THREE.Shape();shape.absarc(0,0,radius,0,TAU,false);return shape;}
+// A slender four-sided ray from near the core to its tip.
+function rayShape(length,width,base=.16){const shape=new THREE.Shape([new THREE.Vector2(0,length),new THREE.Vector2(width,base),new THREE.Vector2(0,base-.06),new THREE.Vector2(-width,base)]);shape.closePath();return shape;}
+// A band that narrows from w0 to w1 along its points.
+function taperedBand(points,w0,w1){
+  const left=[],right=[],n=points.length;
+  for(let i=0;i<n;i++){
+    const before=points[Math.max(0,i-1)],after=points[Math.min(n-1,i+1)],width=w0+(w1-w0)*i/(n-1);
+    const tangent=after.clone().sub(before).normalize(),normal=new THREE.Vector2(-tangent.y,tangent.x).multiplyScalar(width);
+    left.push(points[i].clone().add(normal));right.push(points[i].clone().sub(normal));
+  }
+  const shape=new THREE.Shape([...left,...right.reverse()]);shape.closePath();return shape;
 }
-const constellationPoints=[[-.65,-.25],[-.32,.38],[-.1,.05],[.22,.55],[.58,.26],[.40,-.38],[-.12,-.47]];
-function constellation(group,medal,m){
-  shapedCase(group,medal,m,medalOutline(medal));
-  curveTube(group,constellationPoints.map(([x,y])=>new THREE.Vector3(x,y,.15)),.012,m.polished);
-  for(const [i,[x,y]] of constellationPoints.entries()){if(i%2){const star=extrude(group,starShape(5,.10,.045),m.polished,{z:.17,depth:.022,bevel:.005});star.position.x=x;star.position.y=y;}else bead(group,.048,x,y,.17,m.polished);}
-  for(const [x,y] of [[-.61,.56],[-.50,-.53],[.05,.75],[.60,-.12],[.18,-.68]])bead(group,.012,x,y,.12,m.satin);
+// Engraved lettering on a flat metal band between two radii.
+function letteringBand(group,text,inner,outer,z,metal,ink){
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;const ctx=canvas.getContext('2d');
+  ctx.fillStyle=metal;ctx.fillRect(0,0,1024,1024);ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';
+  const radius=(inner+outer)/2/outer*512,chars=[...text];ctx.font=`700 ${Math.round((outer-inner)/outer*512*.5)}px system-ui`;
+  chars.forEach((char,i)=>{const a=-Math.PI/2+i/chars.length*TAU;ctx.save();ctx.translate(512+Math.cos(a)*radius,512+Math.sin(a)*radius);ctx.rotate(a+Math.PI/2);ctx.fillText(char,0,0);ctx.restore();});
+  const map=canvasTexture(canvas,true),bumpCanvas=document.createElement('canvas');bumpCanvas.width=bumpCanvas.height=512;bumpCanvas.getContext('2d').drawImage(canvas,0,0,512,512);
+  const geometry=new THREE.RingGeometry(inner,outer,192,2),uv=geometry.attributes.uv,position=geometry.attributes.position;
+  for(let i=0;i<uv.count;i++)uv.setXY(i,position.getX(i)/outer*.5+.5,position.getY(i)/outer*.5+.5);
+  const material=new THREE.MeshPhysicalMaterial({color:'#ffffff',map,bumpMap:canvasTexture(bumpCanvas),bumpScale:.002,metalness:.95,roughness:.3});
+  return mesh(group,geometry,material,0,0,z);
 }
-function galaxy(group,medal,m){
+function starfire(group,medal,m){
   shapedCase(group,medal,m,medalOutline(medal));
-  for(let arm=0;arm<3;arm++){const points=[];for(let i=0;i<=100;i++){const t=i/100,a=.4+t*4.5+arm*TAU/3,r=.16+t*.58;points.push(new THREE.Vector3(Math.cos(a)*r,Math.sin(a)*r,.14+.10*(1-t)));}curveTube(group,points,arm===1?.040:.030,arm===1?m.satin:m.polished);}
-  const core=new THREE.MeshPhysicalMaterial({color:'#a8d9ea',metalness:.8,roughness:.11,clearcoat:1,iridescence:.6});
-  mesh(group,new THREE.IcosahedronGeometry(.15,1),core,0,0,.24);
-  ring(group,.83,.006,.12,m.polished);for(let i=0;i<18;i++){const a=i*TAU/18;bead(group,.008,.80*Math.cos(a),.80*Math.sin(a),.13,m.polished);}
+  for(let i=0;i<60;i++){const a=i/60*TAU;bead(group,.018,.952*Math.cos(a),.952*Math.sin(a),.112,m.polished);}
+  // Fine engraved sunburst beneath the rays.
+  for(let i=0;i<48;i++){const a=(i+.5)/48*TAU,c=Math.cos(a),s=Math.sin(a);curveTube(group,[new THREE.Vector3(.3*c,.3*s,.101),new THREE.Vector3(.84*c,.84*s,.101)],.0019,i%2?m.recess:m.satin);}
+  ring(group,.86,.006,.108,m.satin);
+  for(let i=0;i<12;i++){
+    const a=i/12*TAU;
+    const long=new THREE.Group();long.rotation.z=a;group.add(long);
+    extrude(long,rayShape(.80,.052),m.satin,{z:.118,depth:.012,bevel:.005,segments:4});
+    shard(long,[[.052,.16,.137],[0,.80,.137],[-.052,.16,.137],[0,.30,.175]],m.polished);
+    const mid=new THREE.Group();mid.rotation.z=a+TAU/24;group.add(mid);
+    extrude(mid,rayShape(.56,.036),m.polished,{z:.116,depth:.014,bevel:.005,segments:4});
+  }
+  for(let i=0;i<24;i++){const a=(i+.25)/24*TAU,c=Math.cos(a),s=Math.sin(a);curveTube(group,[new THREE.Vector3(.24*c,.24*s,.12),new THREE.Vector3(.44*c,.44*s,.12)],.004,m.polished);}
+  for(const [x,y,size] of [[-.62,.47,.06],[.66,-.38,.05],[.5,.6,.04],[-.52,-.58,.045]]){const twinkle=extrude(group,starShape(4,size,size*.28),m.polished,{z:.118,depth:.01,bevel:.004,segments:4});twinkle.position.set(x,y,0);}
+  lathe(group,[[0,.13],[.20,.13],[.235,.16],[.225,.2],[.19,.21]],m.satin);
+  ring(group,.205,.016,.205,m.polished);
+  const amber=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#ffc45e',metalness:.15,roughness:.06,clearcoat:1,clearcoatRoughness:.04,iridescence:.35,iridescenceIOR:1.5,emissive:'#4a2600',emissiveIntensity:.5,flatShading:true});
+  const gem=mesh(group,new THREE.IcosahedronGeometry(.18,0),amber,0,0,.27);gem.scale.z=.62;gem.rotation.set(.18,.3,.1);
+  for(let i=0;i<6;i++){const a=i/6*TAU+TAU/12;bead(group,.026,.2*Math.cos(a),.2*Math.sin(a),.25,m.polished);}
+}
+const starchartMain=[[-.52,.12],[-.3,.34],[-.04,.27],[.14,.46],[.40,.30],[.30,.02],[.46,-.24]];
+const starchartMinor=[[-.40,-.22],[-.18,-.40],[.06,-.30],[.12,-.52]];
+function starchart(group,medal,m){
+  shapedCase(group,medal,m,medalOutline(medal));
+  for(let i=0;i<8;i++){const a=Math.PI/2+i*TAU/8;bead(group,.028,.99*Math.cos(a),.99*Math.sin(a),.12,m.polished);}
+  // Graduated ring of the chart plate.
+  ring(group,.83,.013,.122,m.polished);ring(group,.70,.010,.122,m.polished);
+  for(let i=0;i<72;i++){
+    const a=i/72*TAU,major=i%6===0,length=major?.1:.05;
+    const tick=mesh(group,new THREE.BoxGeometry(.006,length,.012),major?m.polished:m.satin,(.83-length/2-.012)*Math.cos(a),(.83-length/2-.012)*Math.sin(a),.118);
+    tick.rotation.z=a-Math.PI/2;
+  }
+  // Celestial grid: parallels and meridians on a slight tilt.
+  const grid=new THREE.Group();grid.rotation.z=.32;group.add(grid);
+  for(const r of [.5,.28])ring(grid,r,.0035,.106,m.satin);
+  for(const k of [.32,.68,.92]){const meridian=ring(grid,.69,.0032,.106,m.satin);meridian.scale.x=k;}
+  curveTube(grid,[new THREE.Vector3(-.69,0,.106),new THREE.Vector3(.69,0,.106)],.0035,m.satin);
+  // Constellation lines are straight segments, as on a printed chart.
+  const segments=(points,z,radius,material)=>{for(let i=1;i<points.length;i++)curveTube(group,[new THREE.Vector3(...points[i-1],z),new THREE.Vector3(...points[i],z)],radius,material);};
+  segments(starchartMain,.15,.009,m.polished);segments(starchartMinor,.14,.005,m.satin);
+  const crystal=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#e8e2ff',metalness:.2,roughness:.05,clearcoat:1,iridescence:.6,iridescenceIOR:1.4,flatShading:true});
+  for(const [i,[x,y]] of starchartMain.entries()){
+    if(i===3){mesh(group,new THREE.OctahedronGeometry(.075,0),crystal,x,y,.2).rotation.set(.3,.2,.1);const flare=extrude(group,starShape(4,.16,.03),m.polished,{z:.15,depth:.008,bevel:.003,segments:4});flare.position.set(x,y,0);}
+    else if(i%2){const star=extrude(group,starShape(5,.075,.032),m.polished,{z:.155,depth:.02,bevel:.005,segments:4});star.position.set(x,y,0);}
+    else bead(group,.038,x,y,.16,m.polished);
+  }
+  for(const [x,y] of starchartMinor)bead(group,.024,x,y,.15,m.satin);
+  const random=seeded(5);
+  for(let i=0;i<26;i++){const a=random()*TAU,r=.12+random()*.54;bead(group,.006+random()*.008,r*Math.cos(a),r*Math.sin(a),.112,m.polished);}
+}
+function starriver(group,medal,m){
+  shapedCase(group,medal,m,medalOutline(medal));
+  // Faceted spikes over the twelve outer points.
+  for(let i=0;i<12;i++){const a=Math.PI/2+i*TAU/12,p=(r,da)=>[r*Math.cos(a+da),r*Math.sin(a+da)];shard(group,[[...p(.98,-.075),.1],[...p(1.13,0),.1],[...p(.98,.075),.1],[...p(1.01,0),.15]],m.polished);}
+  ring(group,.945,.017,.118,m.polished);ring(group,.905,.006,.118,m.satin);
+  letteringBand(group,'RIVER OF STARS  ·  PERSONAL COLLECTION  ·  DSH MEDALS  ·  ',.815,.885,.106,m.palette.metal,'#1d1206');
+  ring(group,.81,.009,.112,m.polished);
+  // Two major and two minor spiral arms in layered enamel, each edged in gold.
+  const armA=new THREE.MeshPhysicalMaterial({color:medal.locked?'#59606b':'#4d5fe6',metalness:.25,roughness:.2,specularIntensity:.45,clearcoat:.7,clearcoatRoughness:.1,iridescence:.45,iridescenceIOR:1.4});
+  const armB=new THREE.MeshPhysicalMaterial({color:medal.locked?'#4c535d':'#25aecb',metalness:.25,roughness:.2,specularIntensity:.45,clearcoat:.7,clearcoatRoughness:.1,iridescence:.45,iridescenceIOR:1.4});
+  const random=seeded(10);
+  for(let k=0;k<4;k++){
+    const major=k%2===0,base=k*Math.PI/2,points=[];
+    for(let i=0;i<=80;i++){const t=i/80,a=base+t*(major?3.7:2.9),r=(major?.1:.14)+t*(major?.6:.5);points.push(new THREE.Vector2(r*Math.cos(a),r*Math.sin(a)));}
+    extrude(group,taperedBand(points,major?.075:.045,.01),major?armA:armB,{z:major?.112:.106,depth:.014,bevel:.006,segments:4});
+    curveTube(group,points.filter((_,i)=>i%2===0).map(p=>new THREE.Vector3(p.x,p.y,major?.137:.13)),major?.005:.0035,m.polished);
+    for(let j=0;j<(major?18:10);j++){const p=points[Math.floor(random()*80)],jx=(random()-.5)*.09,jy=(random()-.5)*.09;bead(group,.006+random()*.01,p.x+jx,p.y+jy,.14,m.polished);}
+  }
+  for(let i=0;i<22;i++){const a=random()*TAU,r=.2+random()*.52;bead(group,.004+random()*.006,r*Math.cos(a),r*Math.sin(a),.11,m.satin);}
+  // Luminous core.
+  const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=256;const g=glowCanvas.getContext('2d'),gradient=g.createRadialGradient(128,128,0,128,128,128);
+  gradient.addColorStop(0,'rgba(255,232,190,.75)');gradient.addColorStop(.3,'rgba(255,190,130,.28)');gradient.addColorStop(1,'rgba(120,110,255,0)');g.fillStyle=gradient;g.fillRect(0,0,256,256);
+  if(!medal.locked)mesh(group,new THREE.CircleGeometry(.26,64),new THREE.MeshBasicMaterial({map:canvasTexture(glowCanvas,true),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),0,0,.15);
+  ring(group,.13,.014,.17,m.polished);
+  const core=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#fff1d8',metalness:.2,roughness:.08,clearcoat:1,emissive:medal.locked?'#000000':'#ffb86b',emissiveIntensity:.55});
+  const sun=mesh(group,new THREE.IcosahedronGeometry(.105,2),core,0,0,.2);sun.scale.z=.7;
 }
 function glyphPath(text, transform = (x,y) => [x,y]) {
   const path = new THREE.ShapePath();
@@ -589,9 +679,9 @@ function medalOutline(medal) {
   if(design==='evergreen')return evergreenOutline();
   if(design==='compass')return roundedPolygon(8,1.045,Math.PI/8,.06);
   if(design==='rosette')return scallopedMedallion(1,8);
-  if(design==='prism')return roundedPolygon(3,1.12,Math.PI/2,.09);
-  if(design==='constellation')return starShape(5,1.07,.89);
-  if(design==='galaxy')return roundedPolygon(12,1.04,Math.PI/12,.12);
+  if(design==='starfire')return circleShape(1.02);
+  if(design==='starchart')return starShape(8,1.09,.91);
+  if(design==='starriver')return starShape(12,1.15,.97);
   if(design==='first')return cushion(1.12);
   if(design==='beyond')return roundedPolygon(12,1.04,Math.PI/12,.22);
   if(design==='dawn')return flutedCircle(1.015);
@@ -776,12 +866,20 @@ function drawFeatureLines(ctx,medal){
     line(gem,true);ctx.lineWidth=.007;
     for(let i=0;i<8;i++)line([gem[i],[.075*Math.cos((i+.5)*TAU/8),.075*Math.sin((i+.5)*TAU/8)],gem[(i+1)%8]]);
     circle(0,0,.075);
-  }else if(design==='prism'){
-    shape(roundedPolygon(3,.77,Math.PI/2,.035));line([[0,.40],[.39,-.04],[0,-.46],[-.39,-.04]],true);line([[0,.40],[0,-.46]]);line([[-.39,-.04],[.39,-.04]]);
-  }else if(design==='constellation'){
-    line(constellationPoints);for(const [i,[x,y]] of constellationPoints.entries()){ctx.save();ctx.translate(x,y);if(i%2)shape(starShape(5,.10,.045));else circle(0,0,.048);ctx.restore();}
-  }else if(design==='galaxy'){
-    for(let arm=0;arm<3;arm++){const points=Array.from({length:101},(_,i)=>{const t=i/100,a=.4+t*4.5+arm*TAU/3,r=.16+t*.58;return new THREE.Vector2(Math.cos(a)*r,Math.sin(a)*r);});shape(metalBand(points,.024));}circle(0,0,.15);circle(0,0,.83);
+  }else if(design==='starfire'){
+    ctx.lineWidth=.012;circle(0,0,.952);circle(0,0,.86);
+    for(let i=0;i<12;i++){ctx.save();ctx.rotate(i*TAU/12);line([[0,.80],[.052,.16],[0,.10],[-.052,.16]],true);ctx.rotate(TAU/24);line([[0,.56],[.036,.16],[0,.10],[-.036,.16]],true);ctx.restore();}
+    ctx.lineWidth=.018;circle(0,0,.22);line(Array.from({length:6},(_,i)=>[.15*Math.cos(i*TAU/6),.15*Math.sin(i*TAU/6)]),true);
+  }else if(design==='starchart'){
+    ctx.lineWidth=.014;circle(0,0,.83);circle(0,0,.70);
+    for(let i=0;i<72;i+=6){const a=i/72*TAU;line([[.72*Math.cos(a),.72*Math.sin(a)],[.81*Math.cos(a),.81*Math.sin(a)]]);}
+    ctx.lineWidth=.008;circle(0,0,.5);circle(0,0,.28);ctx.save();ctx.rotate(.32);for(const k of [.32,.68,.92]){ctx.beginPath();ctx.ellipse(0,0,.69*k,.69,0,0,TAU);ctx.stroke();}ctx.restore();
+    ctx.lineWidth=.016;line(starchartMain);line(starchartMinor);
+    for(const [i,[x,y]] of starchartMain.entries()){ctx.save();ctx.translate(x,y);if(i===3)shape(starShape(4,.16,.03));else if(i%2)shape(starShape(5,.075,.032));else circle(0,0,.038);ctx.restore();}
+  }else if(design==='starriver'){
+    ctx.lineWidth=.012;circle(0,0,.945);circle(0,0,.89);circle(0,0,.78);
+    for(let k=0;k<4;k++){const major=k%2===0,base=k*Math.PI/2;const points=Array.from({length:81},(_,i)=>{const t=i/80,a=base+t*(major?3.7:2.9),r=(major?.1:.14)+t*(major?.6:.5);return new THREE.Vector2(r*Math.cos(a),r*Math.sin(a));});shape(taperedBand(points,major?.075:.045,.01));}
+    ctx.lineWidth=.018;circle(0,0,.13);
   }
   ctx.restore();
 }
@@ -803,7 +901,7 @@ function buildMedal(medal) {
   const key = `${medal.id}:${medal.serial}:${medal.period}`;
   if (models.has(key)) return models.get(key);
   const group = new THREE.Group(), m = materialsFor(medal);
-  ({numeric:numericMedal,orbit,lunar:moon,rise:growth,dawn,first:milestone,beyond,evergreen,compass,rosette:rosetteMedal,prism,constellation,galaxy}[medal.design||medal.id]||orbit)(group,medal,m);
+  ({numeric:numericMedal,orbit,lunar:moon,rise:growth,dawn,first:milestone,beyond,evergreen,compass,rosette:rosetteMedal,starfire,starchart,starriver}[medal.design||medal.id]||orbit)(group,medal,m);
   models.set(key, group);
   return group;
 }
@@ -896,6 +994,31 @@ class MedalStage {
     this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(canvas);
     this.visibilityObserver = new IntersectionObserver(([entry]) => { this.visible = entry.isIntersecting; if (this.visible) { this.draw(); wake(); } }); this.visibilityObserver.observe(canvas);
     stages.add(this); pruneModels(); this.bind(); this.draw(); wake();
+  }
+
+  // Render a medal at the fixed display pose into a square transparent canvas, for share images.
+  static async snapshot(medal, size = 1024) {
+    const out = document.createElement('canvas'); out.width = out.height = size;
+    const ctx = out.getContext('2d');
+    try {
+      const engine = getEngine(); if (!engine.healthy) throw new Error('webgl');
+      const { renderer, scene, camera, glint } = engine, model = buildMedal(medal);
+      const previous = scene.getObjectByName('active-medal'); if (previous) scene.remove(previous);
+      model.name = 'active-medal'; scene.add(model);
+      model.rotation.set(POSE.x, POSE.y, -.035); model.position.set(0, 0, 0); model.scale.setScalar(1);
+      scene.environmentRotation.set(0, .27, .12); glint.intensity = 0;
+      camera.aspect = 1; camera.position.z = 5.25; camera.updateProjectionMatrix();
+      renderer.setSize(size, size, false); renderer.render(scene, camera);
+      ctx.drawImage(renderer.domElement, 0, 0, size, size);
+      scene.remove(model); pruneModels();
+      // Visible stages restore their own size and model on their next draw.
+      for (const stage of stages) { stage.width = 0; stage.draw(); }
+    } catch {
+      const key = `${medal.design === 'numeric' ? medal.id : medal.design || medal.id}-front`;
+      const image = new Image(); image.src = new URL(`assets/medals/${key}.png`, scriptBase).href;
+      await image.decode(); ctx.drawImage(image, 0, 0, size, size);
+    }
+    return out;
   }
 
   static get diagnostics() { return { engine: 'three.js', revision: THREE.REVISION, webgl: !!engine?.healthy, renders: engine?.renders || 0, contexts: engine ? 1 : 0, cachedModels: models.size }; }

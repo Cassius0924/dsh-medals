@@ -2,8 +2,14 @@ import {period} from './calendar.js';
 import {safeAdd} from './usage.js';
 import {RULES} from './awards.js';
 
+// Lifetime 1B/5B/10B milestones: one star, a star chart, a river of stars (docs/adr/0001-cosmic-milestones.md).
+const COSMIC=[
+  {id:'starfire',name:'星火初燃',metal:'gold',inscription:'一点星火，终将燎原'},
+  {id:'starchart',name:'群星为图',metal:'gold',inscription:'把散落的星，连成自己的图'},
+  {id:'starriver',name:'星河万里',metal:'gold',inscription:'星河万里，皆是来路'},
+];
 function crafted(design){
-  const {name,metal,inscription}=RULES.find(rule=>rule.id===design)??{name:design,metal:'gold',inscription:'让每一份探索，都有自己的形状'};
+  const {name,metal,inscription}=[...RULES,...COSMIC].find(rule=>rule.id===design)??{name:design,metal:'gold',inscription:'让每一份探索，都有自己的形状'};
   return {name,metal,inscription,design};
 }
 
@@ -12,9 +18,9 @@ export const DAILY_TARGET=5e6;
 export const CHALLENGES=[1,2,4].map(multiplier=>({id:`daily-${multiplier}`,name:`单日 ${multiplier*5}M`,series:'daily',family:'period',unit:'day',metric:'tokens',target:DAILY_TARGET*multiplier,number:String(multiplier*5),suffix:'M',grade:0,metal:'silver',design:'numeric'})).concat([3,5,7].map(target=>({id:`week-days-${target}`,name:target===7?'完美一周':`一周 ${target} 天`,series:'weekly',family:'period',unit:'week',metric:'days',target,number:String(target),grade:target===7?1:0,metal:'silver',design:'numeric',perfect:target===7})),[7,30,100,365].map(target=>({id:`days-${target}`,name:`${target} 个达标日`,series:'days',family:'lifetime',unit:'lifetime',metric:'days',target,number:String(target),grade:target>=100?2:target>=30?1:0,metal:target>=365?'silver':'gold',design:target>=365?'compass':target>=100?'evergreen':'numeric'})));
 CHALLENGES.push(
   ...[10,20,'all'].map(target=>({id:`month-days-${target}`,name:target==='all'?'完美一月':`一月 ${target} 天`,series:'monthly',family:'period',unit:'month',metric:'days',target,number:target==='all'?'M':String(target),grade:target==='all'?2:1,metal:'gold',design:target==='all'?'rosette':'numeric',perfect:target==='all'})),
-  ...[['100M',100e6,'first'],['500M',500e6,'beyond'],['1B',1e9,'prism'],['5B',5e9,'constellation'],['10B',10e9,'galaxy']].map(([number,target,design],index)=>{
+  ...[['100M',100e6,'first'],['500M',500e6,'beyond'],['1B',1e9,'starfire'],['5B',5e9,'starchart'],['10B',10e9,'starriver']].map(([number,target,design],index)=>{
     const artwork=crafted(design);
-    return {...artwork,id:`tokens-${number}`,name:index<2?artwork.name:`${number} 探索里程`,series:'tokens',family:'lifetime',unit:'lifetime',metric:'tokens',target,number,grade:index===0?1:2};
+    return {...artwork,id:`tokens-${number}`,name:artwork.name,series:'tokens',family:'lifetime',unit:'lifetime',metric:'tokens',target,number,grade:index===0?1:2};
   }),
   {...crafted('orbit'),id:'volume-week',series:'volume',family:'period',unit:'week',metric:'tokens',target:50e6,number:'50M',grade:1},
   {...crafted('lunar'),id:'volume-month',series:'volume',family:'period',unit:'month',metric:'tokens',target:200e6,number:'200M',grade:2},
