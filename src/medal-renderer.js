@@ -71,9 +71,8 @@ function palette(medal) {
   if (medal.design === 'numeric') { const field = {daily:'#a21649',weekly:'#075b5d',monthly:'#482340',days:'#214e7d'}[medal.series] || '#265b9a'; return {metal:medal.metal==='gold'?'#c6a05b':'#bdc5ce',bright:medal.metal==='gold'?'#f3d18c':'#edf0f5',field,dark:medal.metal==='gold'?'#6c4a23':'#4a5665'}; }
   if (medal.locked) return { metal: '#7a8592', bright: '#c8d2db', field: '#18212c', dark: '#35404b' };
   const design=medal.design||medal.id;
-  const fields={evergreen:'#164b3c',compass:'#14394b',rosette:'#ede7d9',starfire:'#0e3a60',starchart:'#2a1d55',starriver:'#06071a'};
-  if(fields[design])return {metal:design==='compass'?'#bdcddd':'#deb976',bright:design==='compass'?'#edf4ff':'#ffe8b5',field:fields[design],dark:'#526078'};
-  if (design === 'lunar') return { metal: '#c2d0e0', bright: '#f3f5fa', field: '#22425c', dark: '#6c849b' };
+  const fields={evergreen:'#164b3c',compass:'#14394b',rosette:'#ede7d9',starfire:'#0e3a60',starchart:'#2a1d55',starriver:'#06071a',moon:'#0e1830',earth:'#0b1a33',sun:'#1c1026',blackhole:'#050509'};
+  if(fields[design])return {metal:design==='compass'||design==='moon'?'#bdcddd':'#deb976',bright:design==='compass'||design==='moon'?'#edf4ff':'#ffe8b5',field:fields[design],dark:'#526078'};
   if (design === 'rise') return { metal: '#c8d9e3', bright: '#f3f5ff', field: '#103b35', dark: '#61778b' };
   if (design === 'dawn') return { metal: '#dfad76', bright: '#ffe0b0', field: '#25213c', dark: '#8d552f' };
   if (design === 'beyond') return { metal: '#bfccd9', bright: '#f4f4ff', field: '#202e49', dark: '#62728c' };
@@ -88,9 +87,9 @@ function materials(medal) {
   const recess = new THREE.MeshStandardMaterial({ color: p.dark, metalness: 1, roughness: .37 });
   const enamel = new THREE.MeshPhysicalMaterial({ color: p.field, metalness: .34, roughness: .24, clearcoat: .92, clearcoatRoughness: .12, bumpMap: engineTurnedTexture(), bumpScale: .0014 });
   // Deep night-sky enamel: low reflectance so the field reads near-black under the studio light.
-  const field=medal.design==='starriver'&&!medal.locked?new THREE.MeshPhysicalMaterial({color:p.field,metalness:0,roughness:.42,specularIntensity:.25,clearcoat:.3,clearcoatRoughness:.22,iridescence:.35,iridescenceIOR:1.3,iridescenceThicknessRange:[380,620],bumpMap:enamel.bumpMap,bumpScale:.0014}):enamel;
+  const field=['starriver','moon','earth','sun','blackhole'].includes(medal.design)&&!medal.locked?new THREE.MeshPhysicalMaterial({color:p.field,metalness:0,roughness:.42,specularIntensity:.25,clearcoat:.3,clearcoatRoughness:.22,iridescence:.35,iridescenceIOR:1.3,iridescenceThicknessRange:[380,620],bumpMap:enamel.bumpMap,bumpScale:.0014}):enamel;
   // Deeper cosmic fields: less specular so the enamel colour carries.
-  const depth={starfire:.55,starchart:.45}[medal.design];if(depth&&!medal.locked)enamel.specularIntensity=depth;
+  const depth={starfire:.55,starchart:.45,moon:.4,earth:.4,sun:.4,blackhole:.25}[medal.design];if(depth&&!medal.locked)enamel.specularIntensity=depth;
   if(medallion){satin.metalness=.82;polished.metalness=.84;polished.roughness=.22;}
   return { satin, polished, recess, enamel:field, palette: p };
 }
@@ -306,26 +305,6 @@ function orbit(group, medal, m) {
   }
 }
 
-function moon(group, medal, m) {
-  circularCase(group, medal, m);
-  const motherOfPearl = new THREE.MeshPhysicalMaterial({ color: medal.locked ? '#57606e' : '#c6e2ea', metalness: .3, roughness: .28, iridescence: .48, iridescenceIOR: 1.38, iridescenceThicknessRange: [150, 380], clearcoat: .7, clearcoatRoughness: .13, bumpMap: brushedTexture(true), bumpScale: .002 });
-  const moonFace = camberedFace(group, 0, .74, .099, motherOfPearl, .028);
-  const moonShape = new THREE.Shape();
-  const a = Math.atan2(.55, .32), r = Math.hypot(.32, .55);
-  moonShape.absarc(0, 0, r, a, TAU - a, false);
-  const innerR = Math.hypot(.02, .55), innerAngle = Math.atan2(.55, .02);
-  moonShape.absarc(.30, 0, innerR, -innerAngle, innerAngle, true); moonShape.closePath();
-  const crescent = extrude(group, moonShape, m.polished, { z: .113, depth: .042, bevel: .025 }); crescent.rotation.z = -.2;
-  const craters = [[-.39,.16,.10],[-.48,-.12,.07],[-.26,-.36,.06],[-.28,.40,.045]];
-  for (const [x, y, radius] of craters) {
-    const crater = ring(group, radius, .008, .182, m.satin); crater.position.x = x; crater.position.y = y;
-  }
-  const path = [];
-  for (let i = 0; i < 160; i++) { const t = i / 160 * TAU; path.push(new THREE.Vector3(Math.cos(t) * .81, Math.sin(t) * .43, .18 + Math.cos(t) * .025)); }
-  const ellipse = curveTube(group, path, .009, m.polished, true); ellipse.rotation.z = -.45;
-  bead(group, .072, .5, .44, .15, m.polished);
-  moonFace.rotation.z = .1;
-}
 
 function shard(group, points, m) {
   const [a, b, c, ridge] = points.map(p => new THREE.Vector3(...p));
@@ -616,6 +595,104 @@ function starriver(group,medal,m){
   const core=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#fff1d8',metalness:.2,roughness:.08,clearcoat:1,emissive:medal.locked?'#000000':'#ffb86b',emissiveIntensity:.55});
   const sun=mesh(group,new THREE.IcosahedronGeometry(.105,2),core,0,0,.2);sun.scale.z=.7;
 }
+// Monthly usage bodies (docs/adr/0004-monthly-usage-series.md): realistic domes with the previous tier as a companion.
+// A hemisphere rising from the field; uvs are projected from the front so textures paint like a photograph.
+function dome(group,radius,z,height,material){
+  const geometry=new THREE.SphereGeometry(radius,128,64,0,TAU,0,Math.PI/2);geometry.rotateX(Math.PI/2);
+  const position=geometry.attributes.position,uv=geometry.attributes.uv;
+  for(let i=0;i<uv.count;i++)uv.setXY(i,position.getX(i)/radius*.5+.5,position.getY(i)/radius*.5+.5);
+  const object=mesh(group,geometry,material,0,0,z);object.scale.z=height/radius;return object;
+}
+function paint(size,draw){const canvas=document.createElement('canvas');canvas.width=canvas.height=size;draw(canvas.getContext('2d'),size);return canvas;}
+// Irregular blob for maria, continents and clouds.
+function blob(ctx,random,x,y,r,lobes=7){ctx.beginPath();const offsets=Array.from({length:lobes},()=>.65+random()*.6);for(let i=0;i<=48;i++){const a=i/48*TAU,k=offsets.reduce((s,o,j)=>s+o*Math.cos(a*(j+1)*.5+j)*.12,1);i?ctx.lineTo(x+Math.cos(a)*r*k,y+Math.sin(a)*r*k):ctx.moveTo(x+Math.cos(a)*r*k,y+Math.sin(a)*r*k);}ctx.closePath();ctx.fill();}
+// Shared upper-left lighting: darken the lower-right limb like a terminator.
+function shade(ctx,s,strength=.55){const g=ctx.createRadialGradient(s*.36,s*.32,s*.1,s*.5,s*.5,s*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.7,`rgba(0,0,10,${strength*.35})`);g.addColorStop(1,`rgba(0,0,10,${strength})`);ctx.fillStyle=g;ctx.fillRect(0,0,s,s);}
+function moonSurface(locked){
+  return paint(1024,(ctx,s)=>{
+    const random=seeded(21);ctx.fillStyle=locked?'#868c94':'#9a9ea6';ctx.fillRect(0,0,s,s);
+    ctx.filter='blur(18px)';ctx.fillStyle='rgba(52,56,66,.75)';for(const [x,y,r] of [[.36,.34,.14],[.52,.38,.1],[.44,.55,.11],[.27,.53,.07],[.6,.58,.07],[.66,.33,.05]])blob(ctx,random,x*s,y*s,r*s,9);ctx.filter='none';
+    for(let i=0;i<4000;i++){ctx.fillStyle=random()<.5?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';ctx.fillRect(random()*s,random()*s,3,3);}
+    const crater=(x,y,r)=>{ctx.fillStyle='rgba(90,94,104,.35)';ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();
+      ctx.lineWidth=Math.max(2,r*.16);ctx.strokeStyle='rgba(40,42,50,.55)';ctx.beginPath();ctx.arc(x,y,r*.92,Math.PI*.95,Math.PI*1.75);ctx.stroke();
+      ctx.strokeStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.arc(x,y,r,Math.PI*1.95,Math.PI*2.75);ctx.stroke();};
+    for(const [x,y,r] of [[.62,.7,.07],[.3,.28,.05],[.7,.45,.045]])crater(x*s,y*s,r*s);
+    for(let i=0;i<34;i++)crater((.12+random()*.76)*s,(.12+random()*.76)*s,(random()**2.2*.035+.006)*s);
+    // Ray system around the large southern crater.
+    ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=3;for(let i=0;i<14;i++){const a=random()*TAU,r=(.1+random()*.18)*s;ctx.beginPath();ctx.moveTo(.62*s,.7*s);ctx.lineTo(.62*s+Math.cos(a)*r,.7*s+Math.sin(a)*r);ctx.stroke();}
+    shade(ctx,s,.6);
+  });
+}
+// Coastline with fine jitter so continents read as land, not shapes.
+function landmass(ctx,random,x,y,r){ctx.beginPath();const n=90,base=Array.from({length:6},()=>random()*TAU);for(let i=0;i<=n;i++){const a=i/n*TAU,k=1+.28*Math.sin(a*2+base[0])+.18*Math.sin(a*3+base[1])+.1*Math.sin(a*7+base[2])+.05*(random()-.5);const px=x+Math.cos(a)*r*k,py=y+Math.sin(a)*r*k*.85;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fill();}
+function earthSurface(locked){
+  return paint(1024,(ctx,s)=>{
+    const random=seeded(33),g=ctx.createRadialGradient(s*.4,s*.38,s*.05,s/2,s/2,s*.55);g.addColorStop(0,locked?'#7f8892':'#2a76c6');g.addColorStop(1,locked?'#4d555e':'#0b3270');ctx.fillStyle=g;ctx.fillRect(0,0,s,s);
+    ctx.filter='blur(1.5px)';
+    for(const [x,y,r,c] of [[.34,.36,.12,'#3f7d3d'],[.42,.6,.075,'#557f3e'],[.63,.4,.1,'#4c8441'],[.6,.6,.085,'#a88e5a'],[.25,.55,.05,'#5d8a45']]){ctx.fillStyle=locked?'#9aa2ab':c;landmass(ctx,random,x*s,y*s,r*s);}
+    ctx.fillStyle=locked?'#a7aeb6':'rgba(160,140,90,.6)';for(let i=0;i<5;i++)landmass(ctx,random,(.55+random()*.12)*s,(.55+random()*.1)*s,.025*s);
+    ctx.fillStyle=locked?'#c3c8ce':'#eef3f7';ctx.beginPath();ctx.ellipse(s/2,s*.075,s*.16,s*.05,0,0,TAU);ctx.fill();ctx.beginPath();ctx.ellipse(s/2,s*.93,s*.13,s*.04,0,0,TAU);ctx.fill();
+    ctx.filter='blur(9px)';ctx.lineCap='round';
+    for(let i=0;i<11;i++){const x=(.12+random()*.76)*s,y=(.12+random()*.76)*s,len=(.08+random()*.14)*s,tilt=(random()-.5)*.8;ctx.strokeStyle=`rgba(255,255,255,${.25+random()*.25})`;ctx.lineWidth=(.012+random()*.02)*s;ctx.beginPath();ctx.moveTo(x-len/2,y);ctx.quadraticCurveTo(x,y+tilt*len,x+len/2,y-tilt*len*.4);ctx.stroke();}
+    ctx.filter='none';shade(ctx,s,.7);
+  });
+}
+function sunSurface(locked){
+  return paint(1024,(ctx,s)=>{
+    const random=seeded(44),g=ctx.createRadialGradient(s/2,s/2,s*.02,s/2,s/2,s*.52);
+    g.addColorStop(0,locked?'#a7aeb6':'#fff1b8');g.addColorStop(.55,locked?'#8a9199':'#ffc04a');g.addColorStop(1,locked?'#5d646c':'#d9611c');ctx.fillStyle=g;ctx.fillRect(0,0,s,s);
+    for(let i=0;i<5000;i++){const x=random()*s,y=random()*s,r=2+random()*6;ctx.fillStyle=random()<.5?'rgba(255,250,210,.16)':'rgba(150,50,0,.12)';ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();}
+    if(!locked)for(const [x,y,r] of [[.38,.44,.022],[.42,.46,.012],[.62,.6,.018]]){ctx.fillStyle='rgba(60,20,5,.75)';ctx.beginPath();ctx.arc(x*s,y*s,r*s,0,TAU);ctx.fill();ctx.fillStyle='rgba(120,45,10,.35)';ctx.beginPath();ctx.arc(x*s,y*s,r*s*1.9,0,TAU);ctx.fill();}
+  });
+}
+function bodyMaterial(canvas,options={}){const map=canvasTexture(canvas,true),bumpCanvas=paint(512,ctx=>ctx.drawImage(canvas,0,0,512,512));return new THREE.MeshPhysicalMaterial({color:'#ffffff',map,bumpMap:canvasTexture(bumpCanvas),bumpScale:.004,metalness:.05,roughness:.75,...options});}
+function starfield(group,m,seed,count,inner=.62,outer=.86){const random=seeded(seed);for(let i=0;i<count;i++){const a=random()*TAU,r=inner+random()*(outer-inner);bead(group,.005+random()*.009,r*Math.cos(a),r*Math.sin(a),.092,m.polished);}}
+function orbitPath(group,m,rx,ry,tilt,z,radius=.007){const path=[];for(let i=0;i<160;i++){const t=i/160*TAU;path.push(new THREE.Vector3(Math.cos(t)*rx,Math.sin(t)*ry,z+Math.sin(t)*.06));}const o=curveTube(group,path,radius,m.polished,true);o.rotation.z=tilt;return o;}
+function moonBody(group,medal,m){
+  circularCase(group,medal,m);starfield(group,m,3,26,.66,.88);
+  dome(group,.6,.086,.3,bodyMaterial(moonSurface(medal.locked),{bumpScale:.009,roughness:.9}));
+  ring(group,.605,.012,.09,m.polished);
+}
+function earthBody(group,medal,m){
+  circularCase(group,medal,m);starfield(group,m,4,22,.66,.88);
+  const earth=bodyMaterial(earthSurface(medal.locked),{roughness:.35,clearcoat:.8,clearcoatRoughness:.15});
+  dome(group,.52,.086,.28,earth);
+  // Thin atmosphere glow at the limb.
+  const atmosphere=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#7fc4ff',transparent:true,opacity:.35,roughness:.2,metalness:0});ring(group,.53,.018,.1,atmosphere);
+  ring(group,.535,.008,.09,m.polished);
+  orbitPath(group,m,.8,.3,.42,.2);
+  const moon=dome(group,.085,0,.07,bodyMaterial(moonSurface(medal.locked)));moon.position.set(-.62,.52,.24);
+}
+function sunBody(group,medal,m){
+  circularCase(group,medal,m);starfield(group,m,5,18,.7,.88);
+  const surface=sunSurface(medal.locked);
+  dome(group,.44,.086,.26,bodyMaterial(surface,{emissive:medal.locked?'#000000':'#ffffff',emissiveMap:canvasTexture(surface,true),emissiveIntensity:medal.locked?0:.55,roughness:.6}));
+  // Corona as a soft halo plus a few prominences, so it never reads as the rays of 星火初燃.
+  const halo=paint(512,(ctx,w)=>{const g=ctx.createRadialGradient(w/2,w/2,w*.3,w/2,w/2,w/2);g.addColorStop(0,'rgba(255,214,130,.9)');g.addColorStop(.35,'rgba(255,170,70,.35)');g.addColorStop(1,'rgba(255,120,40,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,w);});
+  if(!medal.locked)mesh(group,new THREE.RingGeometry(.43,.7,128,2),new THREE.MeshBasicMaterial({map:canvasTexture(halo,true),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),0,0,.095);
+  ring(group,.445,.01,.1,m.polished);
+  const flare=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#ff9a3c',emissive:medal.locked?'#000000':'#ff7a1a',emissiveIntensity:.6,roughness:.4,metalness:.2});
+  for(const [a,size,spread] of [[.8,.17,.22],[2.7,.12,.16],[4.4,.15,.2],[5.6,.09,.12]]){const loop=[];for(let i=0;i<=28;i++){const t=i/28,r=.44+Math.sin(t*Math.PI)*size,b=a+(t-.5)*spread;loop.push(new THREE.Vector3(Math.cos(b)*r,Math.sin(b)*r,.12+Math.sin(t*Math.PI)*.04));}curveTube(group,loop,.014,flare);}
+  orbitPath(group,m,.84,.34,-.35,.18,.005);
+  const earth=dome(group,.07,0,.06,bodyMaterial(earthSurface(medal.locked),{roughness:.35,clearcoat:.8}));earth.position.set(.66,-.42,.22);
+}
+function blackholeBody(group,medal,m){
+  circularCase(group,medal,m);starfield(group,m,6,34,.2,.88);
+  const hot=paint(512,(ctx,s)=>{const g=ctx.createRadialGradient(s/2,s/2,s*.2,s/2,s/2,s/2);g.addColorStop(0,'rgba(255,250,235,1)');g.addColorStop(.18,'rgba(255,214,140,.95)');g.addColorStop(.45,'rgba(255,140,60,.7)');g.addColorStop(.75,'rgba(190,60,30,.35)');g.addColorStop(1,'rgba(120,30,20,0)');ctx.fillStyle=g;ctx.fillRect(0,0,s,s);});
+  const glow=new THREE.MeshBasicMaterial({map:canvasTexture(hot,true),transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false,color:medal.locked?'#7a828c':'#ffffff',opacity:medal.locked?.4:1});
+  // Accretion disk tilted through the hole; the sphere hides its far side.
+  const disk=mesh(group,new THREE.RingGeometry(.26,.8,160,4),glow,0,0,.2);disk.rotation.set(-1.2,0,.18);
+  const shadow=new THREE.MeshBasicMaterial({color:'#000000'});
+  const hole=mesh(group,new THREE.SphereGeometry(.24,64,48),shadow,0,0,.2);
+  // Photon ring and the lensed arc of the far side of the disk.
+  const photon=new THREE.MeshBasicMaterial({color:medal.locked?'#9aa2ab':'#ffe2a8',toneMapped:false});
+  mesh(group,new THREE.TorusGeometry(.255,.006,8,160),photon,0,0,.2);
+  const arc=mesh(group,new THREE.TorusGeometry(.33,.03,12,120,Math.PI),glow,0,.02,.26);arc.scale.set(1.1,.95,.3);arc.rotation.z=.18;
+  ring(group,.86,.008,.1,m.polished);
+  // A star drifting in, trailing a stream into the disk.
+  const star=new THREE.MeshBasicMaterial({color:medal.locked?'#a7aeb6':'#bfe3ff',toneMapped:false});bead(group,.05,.62,.5,.2,star);
+  const stream=[];for(let i=0;i<=40;i++){const t=i/40,a=.68-t*1.9,r=.79-t*.38;stream.push(new THREE.Vector3(Math.cos(a)*r,Math.sin(a)*r*.55+.06,.2+t*.02));}curveTube(group,stream,.008,new THREE.MeshBasicMaterial({color:medal.locked?'#8a929c':'#ffd29a',transparent:true,opacity:.75,toneMapped:false}));
+}
 function glyphPath(text, transform = (x,y) => [x,y]) {
   const path = new THREE.ShapePath();
   let advance = 0;
@@ -815,13 +892,6 @@ function drawFeatureLines(ctx,medal){
     ctx.save();ctx.rotate(Math.PI/4);
     for(let i=0;i<3;i++){const size=.63-i*.18;shape(cushion(size));shape(cushion(size*.64));}
     ctx.restore();line([[0,.10],[.10,0],[0,-.10],[-.10,0]],true);
-  }else if(design==='lunar'){
-    circle(0,0,.74);
-    const crescent=new THREE.Shape(),a=Math.atan2(.55,.32),r=Math.hypot(.32,.55),inner=Math.atan2(.55,.02);
-    crescent.absarc(0,0,r,a,TAU-a,false);crescent.absarc(.30,0,Math.hypot(.02,.55),-inner,inner,true);crescent.closePath();
-    ctx.save();ctx.rotate(-.2);shape(crescent);ctx.restore();
-    for(const [x,y,radius] of [[-.39,.16,.10],[-.48,-.12,.07],[-.26,-.36,.06],[-.28,.40,.045]])circle(x,y,radius);
-    ctx.lineWidth=.012;ctx.beginPath();ctx.ellipse(0,0,.81,.43,-.45,0,TAU);ctx.stroke();circle(.5,.44,.055);
   }else if(design==='rise'){
     for(const [a,b,c,ridge] of [[[-.59,-.34],[-.22,-.51],[.05,.47],[-.20,-.10]],[[-.20,-.48],[.16,-.33],[.43,.66],[.13,.02]],[[.18,-.32],[.54,-.13],[.61,.42],[.40,.04]]]){
       line([a,b,c],true);ctx.lineWidth=.010;for(const point of [a,b,c])line([point,ridge]);ctx.lineWidth=.018;
@@ -866,6 +936,17 @@ function drawFeatureLines(ctx,medal){
     line(gem,true);ctx.lineWidth=.007;
     for(let i=0;i<8;i++)line([gem[i],[.075*Math.cos((i+.5)*TAU/8),.075*Math.sin((i+.5)*TAU/8)],gem[(i+1)%8]]);
     circle(0,0,.075);
+  }else if(design==='moon'){
+    circle(0,0,.6);ctx.lineWidth=.012;for(const [x,y,r] of [[-.18,.16,.12],[.14,.1,.09],[-.05,-.2,.08],[.28,-.22,.05],[-.32,-.08,.045],[.05,.36,.04]])circle(x,y,r);
+  }else if(design==='earth'){
+    circle(0,0,.52);ctx.lineWidth=.012;ctx.save();ctx.rotate(.42);ctx.beginPath();ctx.ellipse(0,0,.8,.3,0,0,TAU);ctx.stroke();ctx.restore();circle(-.62,.52,.085);
+    line([[-.3,.25],[-.12,.32],[-.05,.18],[-.2,.05],[-.32,.1]],true);line([[.1,.05],[.3,.12],[.32,-.1],[.15,-.22],[.05,-.1]],true);
+  }else if(design==='sun'){
+    circle(0,0,.44);ctx.lineWidth=.012;for(let i=0;i<28;i++){const a=i/28*TAU,r=i%2?.55:.63;line([[Math.cos(a-.08)*.44,Math.sin(a-.08)*.44],[Math.cos(a)*r,Math.sin(a)*r],[Math.cos(a+.08)*.44,Math.sin(a+.08)*.44]]);}
+    ctx.save();ctx.rotate(-.35);ctx.beginPath();ctx.ellipse(0,0,.84,.34,0,0,TAU);ctx.stroke();ctx.restore();circle(.66,-.42,.07);
+  }else if(design==='blackhole'){
+    ctx.save();ctx.rotate(.18);ctx.beginPath();ctx.ellipse(0,0,.8,.28,0,0,TAU);ctx.stroke();ctx.beginPath();ctx.ellipse(0,0,.5,.17,0,0,TAU);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(0,.02,.36,.31,0,Math.PI,TAU);ctx.stroke();ctx.restore();circle(0,0,.24);circle(.62,.5,.05);
   }else if(design==='starfire'){
     ctx.lineWidth=.012;circle(0,0,.952);circle(0,0,.86);
     for(let i=0;i<12;i++){ctx.save();ctx.rotate(i*TAU/12);line([[0,.80],[.052,.16],[0,.10],[-.052,.16]],true);ctx.rotate(TAU/24);line([[0,.56],[.036,.16],[0,.10],[-.036,.16]],true);ctx.restore();}
@@ -901,7 +982,7 @@ function buildMedal(medal) {
   const key = `${medal.id}:${medal.serial}:${medal.period}`;
   if (models.has(key)) return models.get(key);
   const group = new THREE.Group(), m = materialsFor(medal);
-  ({numeric:numericMedal,orbit,lunar:moon,rise:growth,dawn,first:milestone,beyond,evergreen,compass,rosette:rosetteMedal,starfire,starchart,starriver}[medal.design||medal.id]||orbit)(group,medal,m);
+  ({numeric:numericMedal,orbit,rise:growth,dawn,first:milestone,beyond,evergreen,compass,rosette:rosetteMedal,starfire,starchart,starriver,moon:moonBody,earth:earthBody,sun:sunBody,blackhole:blackholeBody}[medal.design||medal.id]||orbit)(group,medal,m);
   models.set(key, group);
   return group;
 }

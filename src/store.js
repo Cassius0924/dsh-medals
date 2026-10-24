@@ -26,6 +26,7 @@ function validAward(award) {
 function validateChallenges(s){
   const invalid=()=>{throw new Error('Invalid challenge ledger; restore from backup before continuing');};
   if(!isRecord(s)||s.version!==2||typeof s.initialized!=='boolean'||!isDate(s.enabledOn)||!Array.isArray(s.awards)||!Array.isArray(s.completedDays))invalid();
+  if(s.knownRules!==undefined&&(!Array.isArray(s.knownRules)||s.knownRules.some(id=>typeof id!=='string')))invalid();
   if(s.completedDays.some(d=>!isDate(d)||d<s.enabledOn)||new Set(s.completedDays).size!==s.completedDays.length)invalid();
   const ids=new Set(),serials=new Set();
   for(const a of s.awards){

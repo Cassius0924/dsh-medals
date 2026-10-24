@@ -18,6 +18,7 @@
     if(m.metric==='days')return m.perfect?t(m.unit==='week'?'perfectWeekRequirement':'perfectMonthRequirement'):t('daysRequirement',{period:t(m.unit==='lifetime'?'lifetimeScope':m.unit==='week'?'weekScope':'monthScope'),target:i18n.number(m.target)});
     return t('tokensRequirement',{period:t(m.unit==='day'?'dayTokensScope':m.unit==='lifetime'?'lifetimeScope':m.unit==='week'?'weekTokensScope':'monthTokensScope'),target:fmt(m.target)});
   }
+  const daysDefinition=()=>t('daysDefinition',{target:fmt(state.snapshot?.challenges?.dailyTarget??5e6)});
   function progressText(m){
     const c=state.snapshot.challenges.progress[m.id];if(!c)return '';
     if(!c.eligible)return t('lowBaseline',{previous:fmt(c.previous),minimum:fmt(m.minimum)});
@@ -41,7 +42,7 @@
   function stage(canvas,medal,interactive=false,notice,autoSpin=false){return new MedalStage(canvas,{medal,interactive,autoSpin,onFallback:()=>{if(notice){notice.hidden=false;notice.textContent=t('staticSides');}}});}
   function toast(text){clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>{$('#toast').hidden=true;},4200);}
   // Shelves group the collection by series, in challenge order, so progression reads left to right.
-  const SHELVES=[['daily',['daily']],['period',['weekly','monthly']],['days',['days']],['milestones',['tokens','volume','growth']]];
+  const SHELVES=[['daily',['daily']],['period',['weekly','monthly']],['days',['days']],['monthlyVolume',['monthlyVolume']],['milestones',['tokens','volume','growth']]];
   function lockedCaption(m){
     const c=state.snapshot.challenges.progress[m.id];if(!c)return requirement(m);
     if(m.metric==='days')return t('daysRatio',{current:i18n.number(c.current),target:i18n.number(c.target)});
@@ -62,7 +63,7 @@
     else if(!m.locked)status=`<span class="medal-meta medal-earned">${icon('check')}<span>${esc(t('earnedTimes',{count:m.records.length}))}</span></span>`;
     else status=`${c?.percent!=null&&c.eligible!==false?`<span class="card-bar" aria-hidden="true"><span style="width:${Math.max(2,Math.min(100,c.percent))}%"></span></span>`:''}<span class="medal-meta">${esc(lockedCaption(m))}</span>`;
     el.innerHTML=`<div class="medal-art"><canvas aria-hidden="true"></canvas>${near?`<span class="card-flag">${esc(t('nearUnlock'))}</span>`:''}</div><div class="medal-info od-field"><span class="medal-name">${esc(m.name)}</span>${status}</div>`;
-    el.addEventListener('click',()=>openDetail(m.id));
+    if(m.metric==='days')el.title=daysDefinition();el.addEventListener('click',()=>openDetail(m.id));
     return el;
   }
   function renderCards(){
@@ -72,7 +73,7 @@
       const items=state.medals.filter(m=>series.includes(m.series));if(!items.length)continue;
       const shelf=document.createElement('section');shelf.className='shelf';shelf.setAttribute('aria-label',t('shelf.'+key));
       const earned=items.filter(m=>!m.locked).length;
-      shelf.innerHTML=`<header class="shelf-head"><h3>${esc(t('shelf.'+key))}</h3><span class="shelf-count${earned===items.length?' complete':''}">${i18n.number(earned)} / ${i18n.number(items.length)}</span></header><div class="shelf-grid od-grid"></div>`;
+      shelf.innerHTML=`<header class="shelf-head"><h3>${esc(t('shelf.'+key))}</h3><span class="shelf-count${earned===items.length?' complete':''}">${i18n.number(earned)} / ${i18n.number(items.length)}</span>${key==='days'||key==='period'?`<span class="shelf-note">${esc(daysDefinition())}</span>`:''}</header><div class="shelf-grid od-grid"></div>`;
       const grid=shelf.querySelector('.shelf-grid');
       for(const m of items){const el=card(m,near.has(m.id));grid.append(el);stages.set(m.id,stage(el.querySelector('canvas'),m));}
       $('#collection-grid').append(shelf);
@@ -197,7 +198,7 @@
     // One facts card: the requirement, then either the earned summary or live progress.
     const c=state.snapshot.challenges.progress[m.id],first=m.records[m.records.length-1];
     const facts=m.preview?`<p class="fact-state">${esc(t('previewProgress'))}</p>`:!m.locked?`<p class="fact-state earned">${icon('check')}<span>${esc(t('earnedSince',{count:i18n.number(m.records.length),date:date(first.earnedOn)}))}</span></p>`:`${c?.percent!=null&&c.eligible!==false?`<span class="fact-bar" role="progressbar" aria-label="${esc(t('progressAria',{name:m.name}))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(c.percent)}"><span style="width:${Math.max(2,Math.min(100,c.percent))}%"></span></span>`:''}<p class="fact-state">${icon('lock')}<span>${esc(progressText(m)||t('notUnlocked'))}</span></p>`;
-    $('#detail-requirement').innerHTML=`<span class="fact-label">${esc(t('factRequirement'))}</span><strong>${esc(requirement(m))}</strong>${facts}`;
+    $('#detail-requirement').innerHTML=`<span class="fact-label">${esc(t('factRequirement'))}</span><strong>${esc(requirement(m))}</strong>${m.metric==='days'?`<p class="fact-note">${esc(daysDefinition())}</p>`:''}${facts}`;
     $('#detail-records-block').hidden=m.locked||m.preview;$('#records-heading').textContent=t('recordsCount',{count:i18n.number(m.records.length)});
     $('#detail-records').innerHTML=m.locked||m.preview?'':m.records.map((a,i)=>`<button type="button" class="record record-select" data-record="${i}" aria-pressed="${i===0}"><span class="record-icon">${icon('medal')}</span><span class="od-field"><span class="record-title">${esc(recordsLabel(a))}</span><span class="record-date">${esc(t('recordDate',{date:date(a.earnedOn),backfilled:a.backfilled?t('backfilled'):''}))}</span></span><span class="record-number">#${esc(a.serial)}</span></button>`).join('');
     state.record=0;$('.rotate-controls').hidden=m.locked;$('#detail-replay').hidden=m.locked;$('#detail-share').hidden=m.locked||m.preview;$('#rotation-instructions').textContent=t(m.locked?'unlockHint':'rotateHint');$('#detail-canvas').tabIndex=m.locked?-1:0;

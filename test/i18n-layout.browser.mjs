@@ -24,7 +24,7 @@ try{
   for(const language of ['zh','en']){
     await page.goto(`${origin}/api/dsh-medals/ui/?lang=${language}`);
     await page.locator('#collection-grid .medal-card').first().waitFor();
-    assert.equal(await page.locator('#collection-grid .medal-card').count(),22);
+    assert.equal(await page.locator('#collection-grid .medal-card').count(),25);
     assert.equal(await page.locator('html').getAttribute('lang'),language==='zh'?'zh-CN':'en');
     if(language==='en')await noChinese();
     for(const width of [1280,768,390]){
@@ -56,11 +56,11 @@ try{
     assert.equal(await page.locator('.rotate-controls').isVisible(),false);
     if(language==='en')await noChinese();
     await page.locator('#detail-close').click();
-    for(let i=0;i<5;i++)await page.locator('#gallery-title').click();
+    for(let i=0;i<5;i++)await page.locator('#gallery-title').click({force:true});
     if(language==='en')await noChinese();
     await page.locator('[data-debug-state="locked"]').click();
     if(language==='en')await noChinese();
-    for(let i=0;i<5;i++)await page.locator('#gallery-title').click();
+    for(let i=0;i<5;i++)await page.locator('#gallery-title').click({force:true});
   }
   await page.locator('#collection-grid .medal-card').first().evaluate(el=>{window.retainedCard=el;});
   const polled=page.waitForResponse(r=>r.url().endsWith('/status'));

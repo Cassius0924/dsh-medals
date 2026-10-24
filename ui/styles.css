@@ -71,7 +71,7 @@ dialog{border:1px solid #3b434a;background:var(--stage);color:var(--stage-text);
 :root[data-theme="dark"] .medal-art canvas{filter:drop-shadow(0 8px 6px #00000059)}
 /* Collection shelves, hero prompts and compact completed challenges */
 .page-heading{margin-bottom:24px}.collection-top{margin:40px 0 8px}
-.collection-grid{display:grid;gap:40px}.shelf-head{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px}.shelf-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:.5px}.shelf-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.shelf-count.complete{color:var(--gold-ink)}
+.collection-grid{display:grid;gap:40px}.shelf-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px}.shelf-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:.5px}.shelf-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.shelf-count.complete{color:var(--gold-ink)}
 .medal-info{--od-gap:6px}.medal-meta{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.medal-earned{color:var(--ink)}.medal-earned svg{width:12px;height:12px;color:var(--gold-ink)}
 .card-bar{display:block;height:3px;border-radius:2px;background:var(--line);overflow:hidden}.card-bar>span{display:block;height:100%;background:var(--muted);border-radius:2px}
 .medal-near .medal-art{border-color:var(--gold-line)}.medal-near .card-bar>span{background:var(--blue)}.card-flag{position:absolute;top:8px;left:8px;font-size:10px;line-height:1.6;padding:0 6px;border-radius:4px;background:var(--flag-bg);color:var(--flag-ink);pointer-events:none}
@@ -150,3 +150,6 @@ dialog{border:1px solid #3b434a;background:var(--stage);color:var(--stage-text);
 .share-note{min-height:20px;margin:12px 24px 0;font-size:12px;color:var(--stage-muted)}
 @media(hover:hover){.share-actions button:not(:disabled):hover{border-color:var(--stage-text)}.share-actions .share-primary:not(:disabled):hover{background:#efd9a6}}
 @media(max-width:479px){.share-dialog{width:calc(100vw - 24px)}.share-preview{margin:8px 16px 0}.share-actions{margin:16px 16px 0}}
+.shelf-note{margin-left:auto;font-size:12px;color:var(--muted)}
+.fact-note{margin:-4px 0 0;font-size:12px;color:var(--stage-muted)}
+@media(max-width:479px){.shelf-note{margin-left:0;flex-basis:100%}}

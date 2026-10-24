@@ -17,7 +17,7 @@ const response=await request('/api/dsh-medals/status');
 assert.equal(response.status,200);
 const status=await response.json();
 assert.equal(status.complete,true);
-assert.equal(status.challenges.rules.length,22);
+assert.equal(status.challenges.rules.length,25);
 assert.deepEqual(status.challenges.rules,CHALLENGES,'Public host must serve the current challenge artwork configuration');
 const backup=(await readFile(new URL('../evidence/preview-backup-location.txt',import.meta.url),'utf8')).trim();
 const previous=JSON.parse(await readFile(backup+'/ledger.json','utf8'));

@@ -16,7 +16,7 @@ test('Chinese and English cover every static, dynamic and accessibility translat
   for(const value of Object.values(dictionaries.en))assert.doesNotMatch(value,/\p{Script=Han}/u);
 });
 
-test('all 22 medal names translate without changing their identity or thresholds',()=>{
+test('all 25 medal names translate without changing their identity or thresholds',()=>{
   const en=createI18n('en-GB'),zh=createI18n('zh-CN');
   for(const rule of CHALLENGES){
     assert.equal(zh.medalName(rule),rule.name);
@@ -24,6 +24,7 @@ test('all 22 medal names translate without changing their identity or thresholds
   }
   assert.equal(en.medalName(CHALLENGES.find(r=>r.id==='volume-week')),'Stellar Orbit');
   assert.equal(en.medalName(CHALLENGES.find(r=>r.id==='tokens-500M')),'Endless Voyage');
+  assert.equal(en.medalName(CHALLENGES.find(r=>r.id==='volume-month-3B')),'Event Horizon');
   assert.equal(normalizeLocale('zh-Hans'),'zh');
   assert.equal(normalizeLocale('de-DE'),'en');
 });

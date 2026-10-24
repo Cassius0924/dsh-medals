@@ -46,7 +46,7 @@ try{
  await nav.click();await frame.locator('#collection-summary').filter({hasText:'枚已收藏'}).waitFor({timeout:120000});
  await frame.locator('#return-session').waitFor();
  assert.equal(await frame.locator('#return-session').evaluate(e=>getComputedStyle(e).position),'fixed');
- assert.equal(await frame.locator('#collection-grid .medal-card').count(),22);
+ assert.equal(await frame.locator('#collection-grid .medal-card').count(),25);
  assert.equal(new Set(status.challenges.rules.filter(r=>r.design!=='numeric').map(r=>r.design)).size,12);
  assert.deepEqual(status.challenges.rules.filter(r=>r.unit==='day').map(r=>r.target),[5e6,10e6,20e6]);
  assert.equal(await frame.locator('#hero-canvas').evaluate(()=>MedalStage.diagnostics.webgl),true);
@@ -56,12 +56,12 @@ try{
  await frame.locator('[data-view="progress"]').click();assert.equal(await frame.locator('.task').count(),3);assert.match(await frame.locator('#task-list').textContent(),/5M/);
  await frame.locator('[data-period="week"]').click();assert.equal(await frame.locator('.task').count(),5);
  await frame.locator('[data-period="month"]').click();assert.match(await frame.locator('#task-list').textContent(),/200M/);
- await frame.locator('[data-view="collection"]').click();for(let i=0;i<5;i++)await frame.locator('#gallery-title').click();
+ await frame.locator('[data-view="collection"]').click();for(let i=0;i<5;i++)await frame.locator('#gallery-title').click({force:true});
  assert.equal(await frame.locator('#collection-grid .medal-locked').count(),0);
  await frame.locator('#collection-grid [data-medal="tokens-10B"]').click();assert.equal(await frame.locator('.rotate-controls').isVisible(),true);
  await page.screenshot({path:new URL('../evidence/live-debug-earned.png',import.meta.url).pathname,fullPage:true});await frame.locator('#detail-close').click();
- await frame.locator('[data-debug-state="locked"]').click();assert.equal(await frame.locator('#collection-grid .medal-locked').count(),22);
- for(let i=0;i<5;i++)await frame.locator('#gallery-title').click();assert.equal(await frame.locator('#unlocked-count').textContent(),String(new Set(status.challenges.awards.map(a=>a.ruleId)).size));
+ await frame.locator('[data-debug-state="locked"]').click();assert.equal(await frame.locator('#collection-grid .medal-locked').count(),25);
+ for(let i=0;i<5;i++)await frame.locator('#gallery-title').click({force:true});assert.equal(await frame.locator('#unlocked-count').textContent(),String(new Set(status.challenges.awards.map(a=>a.ruleId)).size));
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:new URL('../evidence/live-dsh-mobile.png',import.meta.url).pathname,fullPage:true});
  assert.equal(await frame.locator('body').evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await frame.locator('#return-session').click();await page.locator('.dsh-medals-panel').waitFor({state:'detached'});

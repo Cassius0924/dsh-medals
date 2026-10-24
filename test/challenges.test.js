@@ -4,7 +4,7 @@ import * as challenges from '../src/challenges.js';
 import {RULES} from '../src/awards.js';
 
 test('classic sculpted medals remain earnable at their original absolute and growth thresholds', () => {
-  const pairs=[['volume-week','orbit'],['volume-month','lunar'],['growth-week','rise'],['growth-month','dawn'],['tokens-100M','first'],['tokens-500M','beyond']];
+  const pairs=[['volume-week','orbit'],['growth-week','rise'],['growth-month','dawn'],['tokens-100M','first'],['tokens-500M','beyond']];
   for(const [id,design] of pairs){
     const current=challenges.CHALLENGES.find(r=>r.id===id),classic=RULES.find(r=>r.id===design);
     assert.equal(current.design,design);
@@ -60,8 +60,8 @@ test('monthly consistency handles leap months and absolute usage backfills', () 
   const history=challenges.settleChallenges({'2026-08-14':600e6},challenges.createChallenges('2026-10-23'),{today:'2026-10-23',backfill:true});
   assert.equal(history.completedDays.length,0);
   assert.deepEqual(history.awards.filter(a=>a.ruleId.startsWith('tokens-')).map(a=>a.ruleId),['tokens-100M','tokens-500M']);
-  assert.equal(history.awards.filter(a=>a.ruleId.startsWith('volume-')).length,2);
-  assert.equal(challenges.CHALLENGES.length,22);
+  assert.deepEqual(history.awards.filter(a=>a.ruleId.startsWith('volume-')).map(a=>a.ruleId),['volume-week','volume-month','volume-month-500M']);
+  assert.equal(challenges.CHALLENGES.length,25);
 });
 
 test('growth awards close complete periods only, enforce basis, and are idempotent', () => {
@@ -80,4 +80,24 @@ test('progress publishes fixed thresholds and ineligible growth', () => {
   assert.deepEqual([progress['daily-1'].current,progress['daily-1'].target],[3e6,5e6]);
   assert.equal(progress['growth-week'].eligible,false);
   assert.equal(progress['week-days-3'].current,0);
+});
+
+test('monthly usage keeps 月面漫游 at 200M and adds three larger tiers',()=>{
+  const monthly=challenges.CHALLENGES.filter(r=>r.series==='monthlyVolume');
+  assert.deepEqual(monthly.map(r=>[r.id,r.name,r.target]),[['volume-month','月面漫游',200e6],['volume-month-500M','蔚蓝家园',500e6],['volume-month-1B','日冕之光',1e9],['volume-month-3B','事件视界',3e9]]);
+  assert(monthly.every(r=>r.unit==='month'&&r.metric==='tokens'));
+});
+
+test('tiers added after install backfill closed months quietly and reveal only the current month',()=>{
+  // A ledger written before knownRules existed already settled the original 22 rules.
+  const before=challenges.settleChallenges({'2026-08-14':600e6},challenges.createChallenges('2026-08-01'),{today:'2026-08-20',backfill:true});
+  const legacy={...before,awards:before.awards.filter(a=>!a.ruleId.startsWith('volume-month-')),knownRules:undefined};
+  const after=challenges.settleChallenges({'2026-08-14':600e6,'2026-10-20':1.2e9},legacy,{today:'2026-10-24'});
+  const august=after.awards.find(a=>a.id==='volume-month-500M:2026-08-01'),october=after.awards.find(a=>a.id==='volume-month-1B:2026-10-01');
+  assert.equal(august.seen,true);assert.equal(august.backfilled,true);
+  assert.equal(october.seen,false);assert.equal(october.backfilled,false);
+  assert.equal(after.knownRules.length,25);
+  // Once known, a later closed-month award for an existing rule is revealed normally.
+  const next=challenges.settleChallenges({'2026-08-14':600e6,'2026-10-20':1.2e9,'2026-09-03':250e6},after,{today:'2026-10-24'});
+  assert.equal(next.awards.find(a=>a.id==='volume-month:2026-09-01').seen,false);
 });

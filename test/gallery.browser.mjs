@@ -22,7 +22,7 @@ try {
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${server.address().port}/api/dsh-medals/ui/?lang=zh`);
  await page.locator('.medal-card').first().waitFor();
- assert.equal(await page.locator('#collection-grid .medal-card').count(),22,'new challenge collection contains all 22 tiers');
+ assert.equal(await page.locator('#collection-grid .medal-card').count(),25,'collection contains all 25 tiers');
  assert.match(await page.locator('#collection-grid [data-medal="volume-week"]').textContent(),/恒星轨道/);
  assert.match(await page.locator('#collection-grid [data-medal="tokens-500M"]').textContent(),/无尽远行/);
  assert.match(await page.locator('#hero-kicker').textContent(),/^我的珍藏 · 1 \/ \d+$/,'featured stage cycles through earned medals');
@@ -51,7 +51,7 @@ try {
  await page.locator('#reveal-view').click();
  await page.waitForFunction(()=>document.querySelector('#detail-dialog').open&&!document.querySelector('#reveal-dialog').open);
  await page.locator('#detail-close').click();
- assert.deepEqual(await page.locator('#collection-grid .shelf').evaluateAll(es=>es.map(e=>e.querySelectorAll('.medal-card').length)),[3,6,4,9],'collection is grouped into four shelves');
+ assert.deepEqual(await page.locator('#collection-grid .shelf').evaluateAll(es=>es.map(e=>e.querySelectorAll('.medal-card').length)),[3,6,4,4,8],'collection is grouped into five shelves');
  await page.locator('[data-view="progress"]').click();
  await page.locator('[data-period="week"]').click();
  assert.match(await page.locator('#task-list').textContent(),/30M/);
@@ -99,5 +99,5 @@ try {
  await page.screenshot({path:new URL('../evidence/gallery-mobile.png',import.meta.url).pathname,fullPage:true});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  assert.deepEqual(errors,[]);
- console.log(JSON.stringify({passed:true,cards:22,realSettlement:true,acknowledged:true,webgl:true,browserErrors:errors}));
+ console.log(JSON.stringify({passed:true,cards:25,realSettlement:true,acknowledged:true,webgl:true,browserErrors:errors}));
 } finally {await browser.close();await new Promise(r=>server.close(r));await rm(dir,{recursive:true,force:true});}
