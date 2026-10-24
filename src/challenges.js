@@ -11,7 +11,7 @@ const COSMIC=[
   {id:'moon',name:'月面漫游',metal:'silver',inscription:'每一小步，都留下一点光'},
   {id:'earth',name:'蔚蓝家园',metal:'gold',inscription:'一整个月的探索，绕成一颗蓝色星球'},
   {id:'sun',name:'日冕之光',metal:'gold',inscription:'把一个月的光，聚成一颗太阳'},
-  {id:'blackhole',name:'事件视界',metal:'gold',inscription:'连光都无法逃离的一个月'},
+  {id:'solarsystem',name:'行星巡礼',metal:'gold',inscription:'一个月，走完八颗行星'},
 ];
 function crafted(design){
   const {name,metal,inscription}=[...RULES,...COSMIC].find(rule=>rule.id===design)??{name:design,metal:'gold',inscription:'让每一份探索，都有自己的形状'};
@@ -31,7 +31,7 @@ CHALLENGES.push(
   {...crafted('moon'),id:'volume-month',series:'monthlyVolume',family:'period',unit:'month',metric:'tokens',target:200e6,number:'200M',grade:1},
   {...crafted('earth'),id:'volume-month-500M',series:'monthlyVolume',family:'period',unit:'month',metric:'tokens',target:500e6,number:'500M',grade:1},
   {...crafted('sun'),id:'volume-month-1B',series:'monthlyVolume',family:'period',unit:'month',metric:'tokens',target:1e9,number:'1B',grade:2},
-  {...crafted('blackhole'),id:'volume-month-3B',series:'monthlyVolume',family:'period',unit:'month',metric:'tokens',target:3e9,number:'3B',grade:2},
+  {...crafted('solarsystem'),id:'volume-month-3B',series:'monthlyVolume',family:'period',unit:'month',metric:'tokens',target:3e9,number:'3B',grade:2},
   {...crafted('rise'),id:'growth-week',series:'growth',family:'growth',unit:'week',metric:'growth',growth:1,minimum:5e6,number:'100',suffix:'%',grade:1},
   {...crafted('dawn'),id:'growth-month',series:'growth',family:'growth',unit:'month',metric:'growth',growth:2,minimum:20e6,number:'200',suffix:'%',grade:2}
 );

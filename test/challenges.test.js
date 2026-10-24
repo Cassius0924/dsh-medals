@@ -84,7 +84,7 @@ test('progress publishes fixed thresholds and ineligible growth', () => {
 
 test('monthly usage keeps 月面漫游 at 200M and adds three larger tiers',()=>{
   const monthly=challenges.CHALLENGES.filter(r=>r.series==='monthlyVolume');
-  assert.deepEqual(monthly.map(r=>[r.id,r.name,r.target]),[['volume-month','月面漫游',200e6],['volume-month-500M','蔚蓝家园',500e6],['volume-month-1B','日冕之光',1e9],['volume-month-3B','事件视界',3e9]]);
+  assert.deepEqual(monthly.map(r=>[r.id,r.name,r.target]),[['volume-month','月面漫游',200e6],['volume-month-500M','蔚蓝家园',500e6],['volume-month-1B','日冕之光',1e9],['volume-month-3B','行星巡礼',3e9]]);
   assert(monthly.every(r=>r.unit==='month'&&r.metric==='tokens'));
 });
 

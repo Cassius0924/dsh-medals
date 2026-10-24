@@ -24,7 +24,7 @@ test('all 25 medal names translate without changing their identity or thresholds
   }
   assert.equal(en.medalName(CHALLENGES.find(r=>r.id==='volume-week')),'Stellar Orbit');
   assert.equal(en.medalName(CHALLENGES.find(r=>r.id==='tokens-500M')),'Endless Voyage');
-  assert.equal(en.medalName(CHALLENGES.find(r=>r.id==='volume-month-3B')),'Event Horizon');
+  assert.equal(en.medalName(CHALLENGES.find(r=>r.id==='volume-month-3B')),'Grand Tour');
   assert.equal(normalizeLocale('zh-Hans'),'zh');
   assert.equal(normalizeLocale('de-DE'),'en');
 });

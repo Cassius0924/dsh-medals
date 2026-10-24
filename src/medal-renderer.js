@@ -71,7 +71,7 @@ function palette(medal) {
   if (medal.design === 'numeric') { const field = {daily:'#a21649',weekly:'#075b5d',monthly:'#482340',days:'#214e7d'}[medal.series] || '#265b9a'; return {metal:medal.metal==='gold'?'#c6a05b':'#bdc5ce',bright:medal.metal==='gold'?'#f3d18c':'#edf0f5',field,dark:medal.metal==='gold'?'#6c4a23':'#4a5665'}; }
   if (medal.locked) return { metal: '#7a8592', bright: '#c8d2db', field: '#18212c', dark: '#35404b' };
   const design=medal.design||medal.id;
-  const fields={evergreen:'#164b3c',compass:'#14394b',rosette:'#ede7d9',starfire:'#0e3a60',starchart:'#2a1d55',starriver:'#06071a',moon:'#0e1830',earth:'#0b1a33',sun:'#1c1026',blackhole:'#050509'};
+  const fields={evergreen:'#164b3c',compass:'#14394b',rosette:'#ede7d9',starfire:'#0e3a60',starchart:'#2a1d55',starriver:'#06071a',moon:'#0e1830',earth:'#0b1a33',sun:'#1c1026',solarsystem:'#07091a'};
   if(fields[design])return {metal:design==='compass'||design==='moon'?'#bdcddd':'#deb976',bright:design==='compass'||design==='moon'?'#edf4ff':'#ffe8b5',field:fields[design],dark:'#526078'};
   if (design === 'rise') return { metal: '#c8d9e3', bright: '#f3f5ff', field: '#103b35', dark: '#61778b' };
   if (design === 'dawn') return { metal: '#dfad76', bright: '#ffe0b0', field: '#25213c', dark: '#8d552f' };
@@ -87,9 +87,9 @@ function materials(medal) {
   const recess = new THREE.MeshStandardMaterial({ color: p.dark, metalness: 1, roughness: .37 });
   const enamel = new THREE.MeshPhysicalMaterial({ color: p.field, metalness: .34, roughness: .24, clearcoat: .92, clearcoatRoughness: .12, bumpMap: engineTurnedTexture(), bumpScale: .0014 });
   // Deep night-sky enamel: low reflectance so the field reads near-black under the studio light.
-  const field=['starriver','moon','earth','sun','blackhole'].includes(medal.design)&&!medal.locked?new THREE.MeshPhysicalMaterial({color:p.field,metalness:0,roughness:.42,specularIntensity:.25,clearcoat:.3,clearcoatRoughness:.22,iridescence:.35,iridescenceIOR:1.3,iridescenceThicknessRange:[380,620],bumpMap:enamel.bumpMap,bumpScale:.0014}):enamel;
+  const field=['starriver','moon','earth','sun','solarsystem'].includes(medal.design)&&!medal.locked?new THREE.MeshPhysicalMaterial({color:p.field,metalness:0,roughness:.42,specularIntensity:.25,clearcoat:.3,clearcoatRoughness:.22,iridescence:.35,iridescenceIOR:1.3,iridescenceThicknessRange:[380,620],bumpMap:enamel.bumpMap,bumpScale:.0014}):enamel;
   // Deeper cosmic fields: less specular so the enamel colour carries.
-  const depth={starfire:.55,starchart:.45,moon:.4,earth:.4,sun:.4,blackhole:.25}[medal.design];if(depth&&!medal.locked)enamel.specularIntensity=depth;
+  const depth={starfire:.55,starchart:.45,moon:.4,earth:.4,sun:.4,solarsystem:.3}[medal.design];if(depth&&!medal.locked)enamel.specularIntensity=depth;
   if(medallion){satin.metalness=.82;polished.metalness=.84;polished.roughness=.22;}
   return { satin, polished, recess, enamel:field, palette: p };
 }
@@ -647,11 +647,16 @@ function sunSurface(locked){
 }
 function bodyMaterial(canvas,options={}){const map=canvasTexture(canvas,true),bumpCanvas=paint(512,ctx=>ctx.drawImage(canvas,0,0,512,512));return new THREE.MeshPhysicalMaterial({color:'#ffffff',map,bumpMap:canvasTexture(bumpCanvas),bumpScale:.004,metalness:.05,roughness:.75,...options});}
 function starfield(group,m,seed,count,inner=.62,outer=.86){const random=seeded(seed);for(let i=0;i<count;i++){const a=random()*TAU,r=inner+random()*(outer-inner);bead(group,.005+random()*.009,r*Math.cos(a),r*Math.sin(a),.092,m.polished);}}
-function orbitPath(group,m,rx,ry,tilt,z,radius=.007){const path=[];for(let i=0;i<160;i++){const t=i/160*TAU;path.push(new THREE.Vector3(Math.cos(t)*rx,Math.sin(t)*ry,z+Math.sin(t)*.06));}const o=curveTube(group,path,radius,m.polished,true);o.rotation.z=tilt;return o;}
 function moonBody(group,medal,m){
   circularCase(group,medal,m);starfield(group,m,3,26,.66,.88);
   dome(group,.6,.086,.3,bodyMaterial(moonSurface(medal.locked),{bumpScale:.009,roughness:.9}));
   ring(group,.605,.012,.09,m.polished);
+}
+// A full sphere resting above the field, textured from the front like dome().
+function globe(group,radius,material,x,y){
+  const geometry=new THREE.SphereGeometry(radius,64,48),position=geometry.attributes.position,uv=geometry.attributes.uv;
+  for(let i=0;i<uv.count;i++)uv.setXY(i,position.getX(i)/radius*.5+.5,position.getY(i)/radius*.5+.5);
+  return mesh(group,geometry,material,x,y,.1+radius);
 }
 function earthBody(group,medal,m){
   circularCase(group,medal,m);starfield(group,m,4,22,.66,.88);
@@ -660,38 +665,59 @@ function earthBody(group,medal,m){
   // Thin atmosphere glow at the limb.
   const atmosphere=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#7fc4ff',transparent:true,opacity:.35,roughness:.2,metalness:0});ring(group,.53,.018,.1,atmosphere);
   ring(group,.535,.008,.09,m.polished);
-  orbitPath(group,m,.8,.3,.42,.2);
-  const moon=dome(group,.085,0,.07,bodyMaterial(moonSurface(medal.locked)));moon.position.set(-.62,.52,.24);
+  globe(group,.085,bodyMaterial(moonSurface(medal.locked),{bumpScale:.003,roughness:.9}),-.6,.5);
 }
+function sunHalo(group,medal,radius,x=0,y=0){
+  if(medal.locked)return;
+  const halo=paint(512,(ctx,w)=>{const g=ctx.createRadialGradient(w/2,w/2,w*.3,w/2,w/2,w/2);g.addColorStop(0,'rgba(255,214,130,.9)');g.addColorStop(.35,'rgba(255,170,70,.35)');g.addColorStop(1,'rgba(255,120,40,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,w);});
+  mesh(group,new THREE.RingGeometry(radius*.98,radius*1.6,128,2),new THREE.MeshBasicMaterial({map:canvasTexture(halo,true),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),x,y,.095);
+}
+function sunMaterial(locked){const surface=sunSurface(locked);return bodyMaterial(surface,{emissive:locked?'#000000':'#ffffff',emissiveMap:canvasTexture(surface,true),emissiveIntensity:locked?0:.55,roughness:.6});}
 function sunBody(group,medal,m){
   circularCase(group,medal,m);starfield(group,m,5,18,.7,.88);
-  const surface=sunSurface(medal.locked);
-  dome(group,.44,.086,.26,bodyMaterial(surface,{emissive:medal.locked?'#000000':'#ffffff',emissiveMap:canvasTexture(surface,true),emissiveIntensity:medal.locked?0:.55,roughness:.6}));
+  dome(group,.44,.086,.26,sunMaterial(medal.locked));
   // Corona as a soft halo plus a few prominences, so it never reads as the rays of 星火初燃.
-  const halo=paint(512,(ctx,w)=>{const g=ctx.createRadialGradient(w/2,w/2,w*.3,w/2,w/2,w/2);g.addColorStop(0,'rgba(255,214,130,.9)');g.addColorStop(.35,'rgba(255,170,70,.35)');g.addColorStop(1,'rgba(255,120,40,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,w);});
-  if(!medal.locked)mesh(group,new THREE.RingGeometry(.43,.7,128,2),new THREE.MeshBasicMaterial({map:canvasTexture(halo,true),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),0,0,.095);
+  sunHalo(group,medal,.44);
   ring(group,.445,.01,.1,m.polished);
   const flare=new THREE.MeshPhysicalMaterial({color:medal.locked?'#8a929c':'#ff9a3c',emissive:medal.locked?'#000000':'#ff7a1a',emissiveIntensity:.6,roughness:.4,metalness:.2});
   for(const [a,size,spread] of [[.8,.17,.22],[2.7,.12,.16],[4.4,.15,.2],[5.6,.09,.12]]){const loop=[];for(let i=0;i<=28;i++){const t=i/28,r=.44+Math.sin(t*Math.PI)*size,b=a+(t-.5)*spread;loop.push(new THREE.Vector3(Math.cos(b)*r,Math.sin(b)*r,.12+Math.sin(t*Math.PI)*.04));}curveTube(group,loop,.014,flare);}
-  orbitPath(group,m,.84,.34,-.35,.18,.005);
-  const earth=dome(group,.07,0,.06,bodyMaterial(earthSurface(medal.locked),{roughness:.35,clearcoat:.8}));earth.position.set(.66,-.42,.22);
+  globe(group,.07,bodyMaterial(earthSurface(medal.locked),{roughness:.35,clearcoat:.8}),.64,-.44);
 }
-function blackholeBody(group,medal,m){
-  circularCase(group,medal,m);starfield(group,m,6,34,.2,.88);
-  const hot=paint(512,(ctx,s)=>{const g=ctx.createRadialGradient(s/2,s/2,s*.2,s/2,s/2,s/2);g.addColorStop(0,'rgba(255,250,235,1)');g.addColorStop(.18,'rgba(255,214,140,.95)');g.addColorStop(.45,'rgba(255,140,60,.7)');g.addColorStop(.75,'rgba(190,60,30,.35)');g.addColorStop(1,'rgba(120,30,20,0)');ctx.fillStyle=g;ctx.fillRect(0,0,s,s);});
-  const glow=new THREE.MeshBasicMaterial({map:canvasTexture(hot,true),transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false,color:medal.locked?'#7a828c':'#ffffff',opacity:medal.locked?.4:1});
-  // Accretion disk tilted through the hole; the sphere hides its far side.
-  const disk=mesh(group,new THREE.RingGeometry(.26,.8,160,4),glow,0,0,.2);disk.rotation.set(-1.2,0,.18);
-  const shadow=new THREE.MeshBasicMaterial({color:'#000000'});
-  const hole=mesh(group,new THREE.SphereGeometry(.24,64,48),shadow,0,0,.2);
-  // Photon ring and the lensed arc of the far side of the disk.
-  const photon=new THREE.MeshBasicMaterial({color:medal.locked?'#9aa2ab':'#ffe2a8',toneMapped:false});
-  mesh(group,new THREE.TorusGeometry(.255,.006,8,160),photon,0,0,.2);
-  const arc=mesh(group,new THREE.TorusGeometry(.33,.03,12,120,Math.PI),glow,0,.02,.26);arc.scale.set(1.1,.95,.3);arc.rotation.z=.18;
-  ring(group,.86,.008,.1,m.polished);
-  // A star drifting in, trailing a stream into the disk.
-  const star=new THREE.MeshBasicMaterial({color:medal.locked?'#a7aeb6':'#bfe3ff',toneMapped:false});bead(group,.05,.62,.5,.2,star);
-  const stream=[];for(let i=0;i<=40;i++){const t=i/40,a=.68-t*1.9,r=.79-t*.38;stream.push(new THREE.Vector3(Math.cos(a)*r,Math.sin(a)*r*.55+.06,.2+t*.02));}curveTube(group,stream,.008,new THREE.MeshBasicMaterial({color:medal.locked?'#8a929c':'#ffd29a',transparent:true,opacity:.75,toneMapped:false}));
+// Planet faces painted as bands, patches and spots, lit from the upper left like the other bodies.
+function planetSurface(kind,locked){
+  return paint(512,(ctx,s)=>{
+    const random=seeded(kind.length*13+7),grey=c=>locked?'#8f969e':c;
+    const bands=colors=>{const h=s/colors.length;colors.forEach((c,i)=>{ctx.fillStyle=grey(c);ctx.fillRect(0,i*h,s,h+1);});ctx.filter='blur(6px)';ctx.drawImage(ctx.canvas,0,0);ctx.filter='none';};
+    if(kind==='mercury'){ctx.fillStyle=grey('#9a948d');ctx.fillRect(0,0,s,s);for(let i=0;i<40;i++){ctx.fillStyle='rgba(60,55,50,.35)';ctx.beginPath();ctx.arc(random()*s,random()*s,4+random()*18,0,TAU);ctx.fill();}}
+    else if(kind==='venus'){ctx.fillStyle=grey('#e6cb8e');ctx.fillRect(0,0,s,s);ctx.filter='blur(14px)';for(let i=0;i<10;i++){ctx.fillStyle=`rgba(${random()<.5?'255,240,200':'190,140,80'},.45)`;ctx.fillRect(0,random()*s,s,20+random()*40);}ctx.filter='none';}
+    else if(kind==='mars'){ctx.fillStyle=grey('#c4562f');ctx.fillRect(0,0,s,s);ctx.filter='blur(10px)';ctx.fillStyle='rgba(110,40,20,.55)';for(let i=0;i<6;i++)blob(ctx,random,random()*s,(.3+random()*.4)*s,(.08+random()*.1)*s);ctx.filter='none';ctx.fillStyle=grey('#f4eee6');ctx.beginPath();ctx.ellipse(s/2,s*.06,s*.18,s*.06,0,0,TAU);ctx.fill();}
+    else if(kind==='jupiter'){bands(['#e8d8bd','#c48a5f','#f1e4cc','#b06a46','#e9d3ad','#c99467','#f3e7d2','#b8794f','#e5cfaa','#cc9a70']);if(!locked){ctx.fillStyle='#b4532f';ctx.beginPath();ctx.ellipse(s*.62,s*.64,s*.11,s*.06,0,0,TAU);ctx.fill();}}
+    else if(kind==='saturn')bands(['#efe0b9','#d8bf8a','#f4e8c8','#c9ab73','#ecd9ab','#d3b880','#f1e3bd','#cdb27b']);
+    else if(kind==='uranus'){ctx.fillStyle=grey('#a6dfe6');ctx.fillRect(0,0,s,s);}
+    else if(kind==='neptune'){bands(['#3f63d2','#3456c4','#4a6fdc','#2f4fb8','#4366d6','#3354c0']);}
+    shade(ctx,s,.7);
+  });
+}
+// Sun at the upper left; planets descend along one diagonal, spaced by distance from the Sun.
+const SOLAR_SUN={x:-.45,y:.28,r:.3},SOLAR_DIRECTION=[Math.cos(-Math.PI/6),Math.sin(-Math.PI/6)];
+const solarPlanets=[['mercury',.38,.03],['venus',.47,.046],['earth',.57,.049],['mars',.66,.037],['jupiter',.84,.12],['saturn',1.07,.095],['uranus',1.25,.062],['neptune',1.36,.055]].map(([kind,k,r])=>[kind,SOLAR_SUN.x+SOLAR_DIRECTION[0]*k,SOLAR_SUN.y+SOLAR_DIRECTION[1]*k,r]);
+function solarsystemBody(group,medal,m){
+  circularCase(group,medal,m);starfield(group,m,7,34,.35,.88);
+  // The Sun sits at the upper left; the eight planets follow in order, without drawn orbits.
+  const {x:sx0,y:sy0,r:sr0}=SOLAR_SUN;
+  const sun=dome(group,sr0,.086,.19,sunMaterial(medal.locked));sun.position.set(sx0,sy0,.086);
+  sunHalo(group,medal,sr0,sx0,sy0);
+  const sunRing=ring(group,sr0+.005,.008,.1,m.polished);sunRing.position.set(sx0,sy0,.1);
+  for(const [kind,x,y,r] of solarPlanets){
+    const surface=kind==='earth'?earthSurface(medal.locked):planetSurface(kind,medal.locked);
+    globe(group,r,bodyMaterial(surface,{roughness:kind==='earth'?.35:.6,bumpScale:.001}),x,y);
+  }
+  // Saturn's rings, tilted so the near edge passes in front of the planet.
+  const [,sx,sy,sr]=solarPlanets[5];
+  const bandCanvas=paint(512,(ctx,w)=>{const g=ctx.createRadialGradient(w/2,w/2,w*.3,w/2,w/2,w/2);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.1,'rgba(230,210,160,.85)');g.addColorStop(.45,'rgba(200,175,120,.55)');g.addColorStop(.55,'rgba(0,0,0,0)');g.addColorStop(.62,'rgba(235,220,180,.8)');g.addColorStop(.95,'rgba(190,165,110,.5)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,w);});
+  const rings=mesh(group,new THREE.RingGeometry(sr*1.25,sr*2.05,128,3),new THREE.MeshStandardMaterial({map:canvasTexture(bandCanvas,true),transparent:true,side:THREE.DoubleSide,roughness:.6,metalness:.2,color:medal.locked?'#9aa2ab':'#ffffff',depthWrite:false}),sx,sy,.1+sr);
+  // Tilt first, then turn the long axis across the diagonal so the rings clear Jupiter and Uranus.
+  rings.rotation.set(-1.2,0,Math.PI/3,'ZYX');
 }
 function glyphPath(text, transform = (x,y) => [x,y]) {
   const path = new THREE.ShapePath();
@@ -939,14 +965,14 @@ function drawFeatureLines(ctx,medal){
   }else if(design==='moon'){
     circle(0,0,.6);ctx.lineWidth=.012;for(const [x,y,r] of [[-.18,.16,.12],[.14,.1,.09],[-.05,-.2,.08],[.28,-.22,.05],[-.32,-.08,.045],[.05,.36,.04]])circle(x,y,r);
   }else if(design==='earth'){
-    circle(0,0,.52);ctx.lineWidth=.012;ctx.save();ctx.rotate(.42);ctx.beginPath();ctx.ellipse(0,0,.8,.3,0,0,TAU);ctx.stroke();ctx.restore();circle(-.62,.52,.085);
+    circle(0,0,.52);ctx.lineWidth=.012;circle(-.6,.5,.085);
     line([[-.3,.25],[-.12,.32],[-.05,.18],[-.2,.05],[-.32,.1]],true);line([[.1,.05],[.3,.12],[.32,-.1],[.15,-.22],[.05,-.1]],true);
   }else if(design==='sun'){
-    circle(0,0,.44);ctx.lineWidth=.012;for(let i=0;i<28;i++){const a=i/28*TAU,r=i%2?.55:.63;line([[Math.cos(a-.08)*.44,Math.sin(a-.08)*.44],[Math.cos(a)*r,Math.sin(a)*r],[Math.cos(a+.08)*.44,Math.sin(a+.08)*.44]]);}
-    ctx.save();ctx.rotate(-.35);ctx.beginPath();ctx.ellipse(0,0,.84,.34,0,0,TAU);ctx.stroke();ctx.restore();circle(.66,-.42,.07);
-  }else if(design==='blackhole'){
-    ctx.save();ctx.rotate(.18);ctx.beginPath();ctx.ellipse(0,0,.8,.28,0,0,TAU);ctx.stroke();ctx.beginPath();ctx.ellipse(0,0,.5,.17,0,0,TAU);ctx.stroke();
-    ctx.beginPath();ctx.ellipse(0,.02,.36,.31,0,Math.PI,TAU);ctx.stroke();ctx.restore();circle(0,0,.24);circle(.62,.5,.05);
+    circle(0,0,.44);ctx.lineWidth=.012;for(const [a,size,spread] of [[.8,.17,.22],[2.7,.12,.16],[4.4,.15,.2],[5.6,.09,.12]]){ctx.beginPath();for(let i=0;i<=28;i++){const t=i/28,r=.44+Math.sin(t*Math.PI)*size,b=a+(t-.5)*spread;i?ctx.lineTo(Math.cos(b)*r,Math.sin(b)*r):ctx.moveTo(Math.cos(b)*r,Math.sin(b)*r);}ctx.stroke();}
+    circle(.64,-.44,.07);
+  }else if(design==='solarsystem'){
+    circle(SOLAR_SUN.x,SOLAR_SUN.y,SOLAR_SUN.r);ctx.lineWidth=.012;for(const [,x,y,r] of solarPlanets)circle(x,y,r);
+    const [,sx,sy,sr]=solarPlanets[5];ctx.save();ctx.translate(sx,sy);ctx.rotate(Math.PI/3);ctx.beginPath();ctx.ellipse(0,0,sr*2.05,sr*.75,0,0,TAU);ctx.stroke();ctx.restore();
   }else if(design==='starfire'){
     ctx.lineWidth=.012;circle(0,0,.952);circle(0,0,.86);
     for(let i=0;i<12;i++){ctx.save();ctx.rotate(i*TAU/12);line([[0,.80],[.052,.16],[0,.10],[-.052,.16]],true);ctx.rotate(TAU/24);line([[0,.56],[.036,.16],[0,.10],[-.036,.16]],true);ctx.restore();}
@@ -982,7 +1008,7 @@ function buildMedal(medal) {
   const key = `${medal.id}:${medal.serial}:${medal.period}`;
   if (models.has(key)) return models.get(key);
   const group = new THREE.Group(), m = materialsFor(medal);
-  ({numeric:numericMedal,orbit,rise:growth,dawn,first:milestone,beyond,evergreen,compass,rosette:rosetteMedal,starfire,starchart,starriver,moon:moonBody,earth:earthBody,sun:sunBody,blackhole:blackholeBody}[medal.design||medal.id]||orbit)(group,medal,m);
+  ({numeric:numericMedal,orbit,rise:growth,dawn,first:milestone,beyond,evergreen,compass,rosette:rosetteMedal,starfire,starchart,starriver,moon:moonBody,earth:earthBody,sun:sunBody,solarsystem:solarsystemBody}[medal.design||medal.id]||orbit)(group,medal,m);
   models.set(key, group);
   return group;
 }

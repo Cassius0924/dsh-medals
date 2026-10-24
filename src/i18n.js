@@ -60,9 +60,9 @@ export const dictionaries = {
     "series.monthlyVolume": "每月用量挑战",
     "shelf.monthlyVolume": "每月用量",
     "craft.moon": "立体月球浮出珐琅夜空，环形山与月海清晰可辨。",
-    "craft.earth": "蓝绿珐琅地球缓缓自转，月亮沿着倾斜的轨道相伴。",
-    "craft.sun": "金橙色太阳表面布满颗粒，日冕火舌环绕边缘，远处的地球沿轨道运行。",
-    "craft.blackhole": "深黑球体被发光吸积盘环绕，引力把光弯成弧，一颗恒星正被吸入。",
+    "craft.earth": "蓝绿珐琅地球披着一层薄薄的大气，月亮在一旁相伴。",
+    "craft.sun": "金橙色太阳表面布满颗粒，日冕光晕与日珥环绕边缘，远处是一颗小小的地球。",
+    "craft.solarsystem": "太阳在左，八大行星由近及远依次排开，土星托着光环，地球仍在其中。",
     "share": "分享",
     "shareTitle": "分享奖牌",
     "close": "关闭",
@@ -295,9 +295,9 @@ export const dictionaries = {
     "series.monthlyVolume": "Monthly usage",
     "shelf.monthlyVolume": "Monthly usage",
     "craft.moon": "A sculpted moon rises from an enamel night, its craters and maria clearly defined.",
-    "craft.earth": "A blue-green enamel Earth turns slowly, accompanied by its moon on a tilted orbit.",
-    "craft.sun": "A granulated golden sun wreathed in coronal flames, with Earth on a distant orbit.",
-    "craft.blackhole": "A black sphere ringed by a glowing accretion disk; gravity bends the light into an arc as a star falls in.",
+    "craft.earth": "A blue-green enamel Earth wrapped in a thin atmosphere, with its moon close by.",
+    "craft.sun": "A granulated golden sun with a soft corona and prominences, a small Earth in the distance.",
+    "craft.solarsystem": "The Sun at the left and the eight planets in order beyond it, Saturn carrying its rings and Earth among them.",
     "share": "Share",
     "shareTitle": "Share medal",
     "close": "Close",
@@ -457,7 +457,7 @@ export const dictionaries = {
     "medal.tokens-10B": "River of Stars",
     "medal.volume-month-500M": "Blue Home",
     "medal.volume-month-1B": "Solar Corona",
-    "medal.volume-month-3B": "Event Horizon",
+    "medal.volume-month-3B": "Grand Tour",
     "dailyName": "{amount}M in a day",
     "weekDaysName": "{days} days in a week",
     "perfectWeekName": "Perfect week",
@@ -487,7 +487,7 @@ export const dictionaries = {
     "inscription.moon": "Every small step leaves a little light",
     "inscription.earth": "A month of exploration, spun into a blue planet",
     "inscription.sun": "A month of light, gathered into a sun",
-    "inscription.blackhole": "A month so dense not even light escapes"
+    "inscription.solarsystem": "Eight worlds in a single month"
   }
 };
 
